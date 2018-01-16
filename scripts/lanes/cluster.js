@@ -41,7 +41,6 @@ for (let i = 0; i < features.length; i++) {
 
                 intersects = turf.booleanOverlap(f1, f2);
             } catch(err) {
-                console.log("e1", err);
                 try {
                     let f1 = features[i], f2 = features[match.idx];
 
@@ -49,12 +48,12 @@ for (let i = 0; i < features.length; i++) {
                     if (f2.geometry.type == "MultiLineString" && f1.geometry.type == "LineString") f1 = turf.multiLineString([f1.geometry.coordinates]);
 
                     intersects = turf.booleanOverlap(f1, f2);
-                } catch(err2) { console.log("e2", err2); }
+                } catch(err2) {}
             }
 
             if (intersects) {
                 uf.union(i, match.idx);
-                console.log(i, match.idx);
+                console.log("merging", i, match.idx);
             }
         }
     }
@@ -86,4 +85,3 @@ let out = {
 }
 
 fs.writeFileSync("data/out.geojson", JSON.stringify(out, null, 4));
-//console.log(lengths);
