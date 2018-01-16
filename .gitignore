@@ -1,1 +1,3 @@
 scripts/census/data/*
+scripts/lanes/data/*
+scripts/lanes/node_modules/*
