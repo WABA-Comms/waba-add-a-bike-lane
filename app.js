@@ -2,7 +2,8 @@ mapboxgl.accessToken = 'pk.eyJ1Ijoibmlja2kiLCJhIjoiczVvbFlXQSJ9.1Gegt3V_MTupW6wf
 
 var map = new mapboxgl.Map({
     container: 'map',
-    style: 'mapbox://styles/nicki/cjav7yuqylrmk2speysk7tz9y',
+    //style: 'mapbox://styles/nicki/cjav7yuqylrmk2speysk7tz9y',
+    style: 'add-bike-lane-style.json',
     center: [-77.007945, 38.896870],
     zoom: 12
 });
@@ -28,14 +29,16 @@ map.on('load', function() {
 	var corridorInfo = [
 		{
 			id: 'crashes-total',
-			text: 'total crashes',
+			text: 'Total crashes',
+			geomType: 'point',
 			data: turf.featureCollection(map.querySourceFeatures('composite', {
 				sourceLayer: 'Crashes_in_DC-d0weq7'
 				}))
 		},
 		{
 			id: 'crashes-cyclists',
-			text: 'bike-related crashes',
+			text: 'Bike-related crashes',
+			geomType: 'point',
 			data: turf.featureCollection(map.querySourceFeatures('composite', {
 				sourceLayer: 'Crashes_in_DC-d0weq7',
 				filter: ['>', 'TOTAL_BICY', 0]
@@ -43,12 +46,27 @@ map.on('load', function() {
 		},
 		{
 			id: 'crashes-pedestrians',
-			text: 'pedestrian-related crashes',
+			text: 'Pedestrian-related crashes',
+			geomType: 'point',
 			data: turf.featureCollection(map.querySourceFeatures('composite', {
 				sourceLayer: 'Crashes_in_DC-d0weq7',
 				filter: ['>', 'TOTAL_PEDE', 0]
 				}))
-		}
+		},
+		{
+			id: 'population',
+			text: 'Population',
+			geomType: 'polygon',
+			data: turf.featureCollection(map.querySourceFeatures('composite', {
+				sourceLayer: 'combined_features-7kmirr'
+				}))
+		}/*,
+		{
+			id: 'modeshare',
+			text: 'Modeshare',
+			geomType: 'polygon',
+			data: null
+		}*/
 	];
 
 	map.on('draw.create', updateCorridor);
@@ -62,7 +80,22 @@ map.on('load', function() {
 		for (var i = 0; i < corridorInfo.length; i++) {
 			// var data will need to be assigned differently depending on the source
 			// current implementation only works for points
-			var data = turf.pointsWithinPolygon(corridorInfo[i].data, bufferedCorridor).features.length;
+			if (corridorInfo[i].geomType = "point") {
+				var data = turf.pointsWithinPolygon(corridorInfo[i].data, bufferedCorridor).features.length;	
+			}
+			/*else {
+				// polygons
+				//var data = turf.intersect(corridorInfo[i].data, bufferedCorridor).features.length;
+				console.log(corridorInfo[3].data.features);
+				for (i in corridorInfo[3].data.features) {
+					var feature = corridorInfo[3].data.features[i];
+
+					if (turf.booleanOverlap(bufferedCorridor, feature)) {
+						console.log(feature.properties.population_total);
+					}
+				};
+				
+			};*/
 			// Creates new rows in the table the first time a line is drawn
 			// Replaces old data each time a new line is drawn
 			// (There's probably better ways to update the table):
@@ -77,7 +110,7 @@ map.on('load', function() {
 				var desc = row.insertCell(0);
 				var more = row.insertCell(1);
 			};
-			desc.innerHTML =  '<span class="txt-bold">' + data + '</span> ' + corridorInfo[i].text;
+			desc.innerHTML =  corridorInfo[i].text + ': ' + '<span class="txt-bold">' + data + '</span> ';
 			// "More" section is a placeholder for accessing:
 			// 1. Information about the data the statistic was derived from 
 			// (we could also consolidate all the data info in one place elsewhere)
