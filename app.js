@@ -2,7 +2,8 @@ mapboxgl.accessToken = 'pk.eyJ1Ijoibmlja2kiLCJhIjoiczVvbFlXQSJ9.1Gegt3V_MTupW6wf
 
 var map = new mapboxgl.Map({
   container: 'map',
-  style: 'mapbox://styles/nicki/cjav7yuqylrmk2speysk7tz9y',
+  //style: 'mapbox://styles/nicki/cjav7yuqylrmk2speysk7tz9y',
+  style: './add-bike-lane-style.json',
   center: [-77.007945, 38.896870],
   zoom: 12
 });
@@ -51,15 +52,62 @@ map.on('load', function() {
     },
     {
       id: 'population',
-      text: 'Population',
+      text: 'population',
       geomType: 'polygon',
       data: turf.featureCollection(map.querySourceFeatures('composite', {
         sourceLayer: 'combined_features-7kmirr'
-      }))
+      })),
+      measurements: ['population_total']
+    },
+    {
+      id: 'modeshare',
+      text: 'modeshare',
+      geomType: 'polygon',
+      data: turf.featureCollection(map.querySourceFeatures('composite', {
+        sourceLayer: 'combined_features-7kmirr',
+      })),
+      measurements: [
+        'transport_bicycle',
+        'transport_car_truck_or_van',
+        'transport_walked',
+        'transport_public_transportation_excluding_taxicab'
+        ],
+      total: 'transport_total'
     }
   ];
 
-  console.log(corridorInfo[3]);
+  //console.log(corridorInfo[2]);
+  //console.log(corridorInfo[3]);
+
+  // Display census data on map to help debug
+  map.addLayer(
+    {
+      "id": "census-blocks",
+      "source": "composite",
+      "source-layer": "combined_features-7kmirr",
+      "type": "line",
+      "paint": {
+        "line-color": "#0f0",
+        "line-opacity": 1
+      }
+    }
+  );
+  map.addLayer(
+    {
+      "id": "census-blocks-population",
+      "source": "composite",
+      "source-layer": "combined_features-7kmirr",
+      "type": "symbol",
+      "layout": {
+        "text-field": ["get", "population_total"],
+        "symbol-placement": "point",
+        "text-size": 10
+      },
+      "paint": {
+        "text-color": "red"
+      }
+    }
+  );
 
   map.addControl(draw);
 
@@ -71,27 +119,59 @@ map.on('load', function() {
     // Currently, this allows you to draw multiple unconnected lines as a "corridor"
     var corridor = draw.getAll();
 
-    // Buffer the corridor to include adjacent point features in returned data
+    // Buffer the corridor to include adjacent point features in returned data.
+    // Result is a featureCollection with a single Polygon feature
     var bufferedCorridor = turf.buffer(corridor, 10, {units: 'meters'});
+
+    // Display buffered corridor on map to help debug
+    map.addLayer(
+      {
+        "id": "bufferedCorridor",
+        "source": {
+          "type": "geojson",
+          "data": bufferedCorridor
+        },
+        "type": "fill",
+        "paint": {
+          "fill-color": "#f00",
+          "fill-opacity": 0.5
+        }
+      }
+    );
 
     for (item in corridorInfo) {
       // Type: Point
       if (corridorInfo[item].geomType === "point") {
-        var data = turf.pointsWithinPolygon(corridorInfo[item].data, bufferedCorridor).features.length;
+        var data = [turf.pointsWithinPolygon(corridorInfo[item].data, bufferedCorridor).features.length];
       }
 
       // Type: Polygon
       if (corridorInfo[item].geomType === "polygon") {
+        var measurements = corridorInfo[item].measurements;
+        var totalCount = [];
+        measurements.forEach(function(){
+           totalCount.push(0);
+        });
         // Iterate through features to check for corridor overlap
-        console.log(corridorInfo[item]);
+        //console.log(corridorInfo[item]);
         for (i in corridorInfo[item].data.features) {
-          console.log("STUFF HAPPENED");
           var feature = corridorInfo[item].data.features[i];
-          console.log(feature);
-          if (turf.booleanOverlap(bufferedCorridor, feature)) {
-            console.log(feature.properties.population_total);
+          //console.log(feature);
+          // We should be able to use the relatively new booleanIntersects function,
+          // which is the inverse of booleanDisjoint,
+          // but for some reason it isn't recognmized.
+          //if (!turf.booleanDisjoint(bufferedCorridor.features[0].geometry, feature)) {
+          if (!turf.booleanDisjoint(bufferedCorridor, feature)) {
+            //console.log(feature.properties[measurements[0]]);
+            // TODO: dedupe tiles using GEOID property (this is unique by block. Is there a better property?)
+            // TODO: add optional % calculation
+            // TODO: figure out why this function does seem to capture all intersecting census blocks
+            for (j in measurements) {
+            totalCount[j] += +feature.properties[measurements[j]];
+            }
           }
-        };
+          var data = totalCount;
+        }
       }
 
       // Creates new rows in the table the first time a line is drawn
@@ -104,12 +184,18 @@ map.on('load', function() {
       } else {
         var row = document.getElementById('corridor-info-table').insertRow(-1);
         row.id = corridorInfo[item].id;
-        console.log(row.id);
+        //console.log("Added row in corridor info table: " + row.id);
         var desc = row.insertCell(0);
         var more = row.insertCell(1);
       };
 
-      desc.innerHTML =  corridorInfo[item].text + ': ' + '<span class="txt-bold">' + data + '</span> ';
+      if (data.length == 1) {
+        console.log(data);
+        desc.innerHTML =  corridorInfo[item].text + ': ' + '<span class="txt-bold">' + data[0] + '</span> ';
+      } else {
+        // TODO: Add additional rows for the sub-items
+        desc.innerHTML =  corridorInfo[item].text + ': ' + '<span class="txt-bold">' + "test" + '</span> ';
+      };
       // "More" section is a placeholder for accessing:
       // 1. Information about the data the statistic was derived from
       // (we could also consolidate all the data info in one place elsewhere)
