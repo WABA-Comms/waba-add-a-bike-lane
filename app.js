@@ -2,7 +2,7 @@ mapboxgl.accessToken = 'pk.eyJ1Ijoibmlja2kiLCJhIjoiczVvbFlXQSJ9.1Gegt3V_MTupW6wf
 
 var map = new mapboxgl.Map({
     container: 'map',
-    style: 'mapbox://styles/mapbox/light-v9',
+  style: 'mapbox://styles/mapbox/light-v9',
     center: [-77.007945, 38.896870],
     zoom: 12
 });
@@ -13,12 +13,11 @@ var draw = new MapboxDraw({
         polygon: false
     }
 });
-console.log('foo')
 map.addControl(draw);
 
 map.on('load', function() {
 	d3.json('scripts/collisions/collisions.geojson', function(err, resp){
-	console.log(resp)
+	if (err) throw err
 	data = resp
 
 	corridorInfo = [
@@ -31,14 +30,14 @@ map.on('load', function() {
 			id: 'crashes-cyclists',
 			text: 'bike-related crashes',
 			data: turf.featureCollection(data.features.filter(function(ft){
-				return ft.properties.TOTAL_BICY > 0
+				return ft.properties.TOTAL_BICYCLES > 0
 			}))
 		},
 		{
 			id: 'crashes-pedestrians',
 			text: 'pedestrian-related crashes',
 			data: turf.featureCollection(data.features.filter(function(ft){
-				return ft.properties.PEDE > 0
+				return ft.properties.TOTAL_PEDESTRIANS > 0
 			}))
 		}
 	];
