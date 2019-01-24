@@ -9,3 +9,6 @@ body { margin:0; padding:0; }
 	border-style: none; 
 	padding: 6px;
 }
+.secondaryText {
+	font-size: 80%;
+}
