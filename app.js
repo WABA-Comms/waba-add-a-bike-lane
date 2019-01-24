@@ -64,9 +64,12 @@ map.on('load', function() {
       text: 'Modeshare',
       secondaryText: [
         'Bicycle',
-        'Automotive',
         'Walking',
-        'Public transportation'
+        'Automobile',
+        'Motorcycle',
+        'Public transportation',
+        'Taxicab',
+        'Other means'
       ],
       geomType: 'polygon',
       data: turf.featureCollection(map.querySourceFeatures('composite', {
@@ -74,9 +77,12 @@ map.on('load', function() {
       })),
       dataFields: [
         'transport_bicycle',
-        'transport_car_truck_or_van',
         'transport_walked',
-        'transport_public_transportation_excluding_taxicab'
+        'transport_car_truck_or_van',
+        'transport_motorcycle',
+        'transport_public_transportation_excluding_taxicab',
+        'transport_taxicab',
+        'transport_other'
         ],
       total: 'transport_total'
     },
@@ -95,7 +101,7 @@ map.on('load', function() {
         '45,000–49,999',
         '50,000–59,999',
         '60,000–74,999',
-        '5,000–99,999',
+        '75,000–99,999',
         '100,000–124,999',
         '125,000–149,999',
         '150,000–199,999',
@@ -203,7 +209,8 @@ map.on('load', function() {
       if (corridorInfo[item].geomType === "polygon") {
         var dataFields = corridorInfo[item].dataFields;
         var count = [];
-        if (corridorInfo[item].total) {
+        var total = corridorInfo[item].total;
+        if (total) {
           var totalCount = 0;
         }
         dataFields.forEach(function() {
@@ -216,23 +223,25 @@ map.on('load', function() {
           //console.log(feature);
           // We should be able to use the relatively new booleanIntersects function,
           // which is the inverse of booleanDisjoint,
-          // but for some reason it isn't recognmized.
+          // but for some reason it isn't recognized.
           //if (!turf.booleanDisjoint(bufferedCorridor.features[0].geometry, feature)) {
           if (!turf.booleanDisjoint(bufferedCorridor, feature)) {
             //console.log(feature.properties[measurements[0]]);
             // TODO: dedupe tiles using GEOID property (this is unique by block. Is there a better property?)
             // TODO: add optional % calculation
-            // TODO: figure out why this function does seem to capture all intersecting census blocks
+            // TODO: figure out why this function does not seem to capture all intersecting census blocks
             for (j in dataFields) {
             count[j] += +feature.properties[dataFields[j]];
             }
-            //if (corridorInfo[item].total) {
-            //totalCount += +feature.properties[total];
-            //var count = count / totalCount * 100;
-            //}
+            if (total) {
+              var percentage = [];
+              totalCount += +feature.properties[total];
+              for (j in dataFields) {
+              percentage.push(Math.round(+count[j] / totalCount * 100));
+              }
+            }
           }
-          
-          var data = count;
+          var data = total ? percentage : count;
         }
       }  
 
@@ -268,10 +277,11 @@ map.on('load', function() {
         console.log(data);
         desc.innerHTML =  corridorInfo[item].text + ': ' + '<span class="txt-bold">' + data[0] + '</span> ';
       } else {
+        console.log(data);
         // TODO: Add additional rows for the sub-items
         desc.innerHTML =  corridorInfo[item].text + '</br>';
         for (j in corridorInfo[item].secondaryText) {
-          desc.innerHTML += '<p class=secondaryText>' + corridorInfo[item].secondaryText[j] + ': ' + '<span class="txt-bold">' + data[j] + '</span></p>';
+          desc.innerHTML += '<p class=secondaryText>' + corridorInfo[item].secondaryText[j] + ': ' + '<span class="txt-bold">' + data[j] + '%</span></p>';
           //var secondaryText = document.createElement('p');
           //secondaryText.innerHTML = '<p>' + corridorInfo[item].secondaryText[j] + ': ' + '<span class="txt-bold">' + data[j] + '</span></p>';
           //desc.appendChild(secondaryText);
