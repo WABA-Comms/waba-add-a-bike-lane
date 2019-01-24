@@ -1,5 +1,6 @@
 mapboxgl.accessToken = 'pk.eyJ1Ijoibmlja2kiLCJhIjoiczVvbFlXQSJ9.1Gegt3V_MTupW6wfjxq2QA';
 
+var collisions, bufferedCorridor;
 var map = new mapboxgl.Map({
 		container: 'map',
 		style: './add-bike-lane-style.json',
@@ -176,14 +177,23 @@ map.on('load', function() {
 		}
 	})
 
+	// populate map with preselected line, if encoded in hash
+
+	var hashedGeometry = decodeHash();
+	if (hashedGeometry) {
+		draw.add(hashedGeometry);
+		updateCorridor()
+	}
+
 	map.on('draw.create', updateCorridor);
 	map.on('draw.delete', updateCorridor);
 	map.on('draw.update', updateCorridor);
 	
 	function updateCorridor(e) {
 
-		var corridor = draw.getAll();
+		corridor = turf.truncate(draw.getAll());
 
+		encodeHash();
 		// Currently, this allows you to draw multiple unconnected lines as a "corridor"
 		bufferedCorridor = turf.buffer(corridor, 10, {units: 'meters'});
 		drawBuffer(bufferedCorridor)
@@ -315,6 +325,46 @@ map.on('load', function() {
 	function drawCollisions(geojson){
 		map.getSource('collisions')
 			.setData(geojson)
+	}
+
+	function encodeHash(){
+		var encoded = '';
+
+		corridor.features.forEach(function(line){
+			var joinedCoords = line.geometry.coordinates.map(function(coord){
+				return coord.join(',')
+			})
+
+			var joinedLine = joinedCoords.join(';');
+
+			encoded += joinedLine+'&'
+		})
+
+		window.location.hash = encoded.slice(0,-1);
+	}
+
+	function decodeHash(){
+
+		var hash = window.location.hash;
+		
+		if (hash.length < 3) return;
+
+		var decodedGeometry = hash
+			.replace('#','')
+			.split('&')
+			.map(function(line){
+				var lineString = line.split(';').map(function(point){
+					var pt = point.split(',').map(function(coord){
+						return parseFloat(coord)
+					});
+
+					return pt
+				})
+				return turf.lineString(lineString)
+			})
+
+
+		return turf.featureCollection(decodedGeometry);
 	}
 });
 })
