@@ -51,6 +51,16 @@ map.on('load', function() {
       }))
     },
     {
+      id: 'speeding-violations',
+      text: 'Speeding violations',
+      geomType: 'point',
+      data: turf.featureCollection(map.querySourceFeatures('composite', {
+        // Currently only Dec 2018 data
+        sourceLayer: 'moving-violations-dec-2018-re-7lav76',
+        filter: ['in', 'VIOLATIONCODE', "T118", "T119", "T120", "T121", "T122"]
+      }))
+    },
+    {
       id: 'population',
       text: 'Population',
       geomType: 'polygon',
@@ -82,7 +92,7 @@ map.on('load', function() {
         'transport_motorcycle',
         'transport_public_transportation_excluding_taxicab',
         'transport_taxicab',
-        'transport_other'
+        'transport_other_means'
         ],
       total: 'transport_total'
     },

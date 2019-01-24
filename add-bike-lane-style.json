@@ -42,7 +42,7 @@
     "pitch": 0,
     "sources": {
         "composite": {
-            "url": "mapbox://mapbox.mapbox-terrain-v2,mapbox.mapbox-streets-v7,nicki.daq6vzck,nicki.382btzl6,k-mahoney.9p18idhz",
+            "url": "mapbox://mapbox.mapbox-terrain-v2,mapbox.mapbox-streets-v7,nicki.daq6vzck,nicki.382btzl6,k-mahoney.9p18idhz,nicki.8a8nff82",
             "type": "vector"
         }
     },
