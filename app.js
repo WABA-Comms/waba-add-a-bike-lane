@@ -2,7 +2,7 @@ mapboxgl.accessToken = 'pk.eyJ1Ijoibmlja2kiLCJhIjoiczVvbFlXQSJ9.1Gegt3V_MTupW6wf
 
 var map = new mapboxgl.Map({
     container: 'map',
-    style: 'mapbox://styles/nicki/cjav7yuqylrmk2speysk7tz9y',
+    style: 'mapbox://styles/mapbox/light-v9',
     center: [-77.007945, 38.896870],
     zoom: 12
 });
@@ -13,10 +13,35 @@ var draw = new MapboxDraw({
         polygon: false
     }
 });
-
+console.log('foo')
 map.addControl(draw);
 
 map.on('load', function() {
+	d3.json('scripts/collisions/collisions.geojson', function(err, resp){
+	console.log(resp)
+	data = resp
+
+	corridorInfo = [
+		{
+			id: 'crashes-total',
+			text: 'total crashes',
+			data: data
+		},
+		{
+			id: 'crashes-cyclists',
+			text: 'bike-related crashes',
+			data: turf.featureCollection(data.features.filter(function(ft){
+				return ft.properties.TOTAL_BICY > 0
+			}))
+		},
+		{
+			id: 'crashes-pedestrians',
+			text: 'pedestrian-related crashes',
+			data: turf.featureCollection(data.features.filter(function(ft){
+				return ft.properties.PEDE > 0
+			}))
+		}
+	];
 
 // Since we are planning to also visualize the corridor data on the map, it's probably
 // easiest to reuse the vector tiles for data querying.
@@ -24,41 +49,46 @@ map.on('load', function() {
 // TODO: filter these crash queries to only include 2016 and later
 // However, the `REPORTDATE` field contains string values, not numbers, so we may want to reformat these first
 // although it would make data updates easier if we didn't reformat it...
-
-	var corridorInfo = [
-		{
-			id: 'crashes-total',
-			text: 'total crashes',
-			data: turf.featureCollection(map.querySourceFeatures('composite', {
-				sourceLayer: 'Crashes_in_DC-d0weq7'
-				}))
+	map
+	.addLayer({
+		'id':'collisions',
+		'type':'circle',
+		'source': {
+			'type': 'geojson',
+			'data': data
 		},
-		{
-			id: 'crashes-cyclists',
-			text: 'bike-related crashes',
-			data: turf.featureCollection(map.querySourceFeatures('composite', {
-				sourceLayer: 'Crashes_in_DC-d0weq7',
-				filter: ['>', 'TOTAL_BICY', 0]
-				}))
-		},
-		{
-			id: 'crashes-pedestrians',
-			text: 'pedestrian-related crashes',
-			data: turf.featureCollection(map.querySourceFeatures('composite', {
-				sourceLayer: 'Crashes_in_DC-d0weq7',
-				filter: ['>', 'TOTAL_PEDE', 0]
-				}))
+		'paint':{
+			'circle-radius':3
 		}
-	];
+	})
+	.addLayer({
+		'id':'buffer',
+		'type':'fill',
+		'source': {
+			'type': 'geojson',
+			'data': {
+			  "type": "FeatureCollection",
+			  "features": []
+			}
+		},
+		'paint':{
+			'fill-opacity':0.25
+		}
+	})
 
 	map.on('draw.create', updateCorridor);
 	map.on('draw.delete', updateCorridor);
 	map.on('draw.update', updateCorridor);
 
 	function updateCorridor(e) {
+
 		var corridor = draw.getAll();
+
 		// Currently, this allows you to draw multiple unconnected lines as a "corridor"
 		var bufferedCorridor = turf.buffer(corridor, 10, {units: 'meters'});
+		drawBuffer(bufferedCorridor)
+		drawCollisions(turf.pointsWithinPolygon(data, bufferedCorridor));
+		map.fitBounds(turf.bbox(bufferedCorridor), {padding:{left:400, top:20, right:20, bottom:20}})
 		for (var i = 0; i < corridorInfo.length; i++) {
 			// var data will need to be assigned differently depending on the source
 			// current implementation only works for points
@@ -86,5 +116,15 @@ map.on('load', function() {
 		};
 		document.getElementById('corridor-info').style.visibility = 'visible';
 	}
-});
 
+	function drawBuffer(geojson){
+		map.getSource('buffer')
+			.setData(geojson)
+	}
+
+	function drawCollisions(geojson){
+		map.getSource('collisions')
+			.setData(geojson)
+	}
+});
+})
