@@ -24,8 +24,11 @@
   <div class='absolute top-ml left bottom z1 w-full w360-ml px12 py12-ml'>
     <div class='flex-parent flex-parent--column viewport-third h-auto-ml hmax-full bg-white round-ml shadow-darken10'>
       <div class='px12 py12 scroll-auto'>
-        <h3 class='txt-m txt-bold mb6'>Add a bike lane</h3>
-        <p>Use the controls in the sidepanel to draw a bike lane on the map. Double-click the end point to "add" your bike lane.</p>
+        <div class="flex-parent-inline col--12 py12">
+          <button class="btn btn--pill col--6 btn--pill-hl" id='add'>Add a lane</button>
+          <button class="btn btn--pill col--6 btn--pill-hr" id='clear'>Clear lanes</button>
+        </div>
+
         <div id='corridor-info' class='mt12'>
           <p>Along this corridor:</p>
           <table id='corridor-info-table' class='table mt12'>
