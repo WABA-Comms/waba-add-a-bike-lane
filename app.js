@@ -6,7 +6,6 @@ var emptyGeojson = turf.featureCollection([]);
 var map = new mapboxgl.Map({
   container: 'map',
   style: './add-bike-lane-style.json',
-  // style: 'mapbox://styles/mapbox/empty-v8',
   center: [-77.007945, 38.896870],
   zoom: 12
 
