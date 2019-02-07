@@ -1,6 +1,8 @@
 mapboxgl.accessToken = 'pk.eyJ1Ijoibmlja2kiLCJhIjoiczVvbFlXQSJ9.1Gegt3V_MTupW6wfjxq2QA';
 
 var collisions, bufferedCorridor;
+var emptyGeojson = turf.featureCollection([]);
+
 var map = new mapboxgl.Map({
   container: 'map',
   style: './add-bike-lane-style.json',
@@ -9,15 +11,31 @@ var map = new mapboxgl.Map({
 
 });
 
+//gl-draw setup
 var draw = new MapboxDraw({
- controls: {
-  point: false,
-  polygon: false
- }
+ displayControlsDefault: false
 });
 map.addControl(draw);
 
-map.on('load', function() {
+d3.select('#add')
+ .on('click', function(){
+  draw.changeMode('draw_line_string')
+ })
+
+d3.select('#clear')
+ .on('click', function(){
+  
+  draw.deleteAll();
+
+  map.getSource('collisions')
+   .setData(emptyGeojson);
+
+  map.getSource('buffer')
+   .setData(emptyGeojson);
+ })
+
+
+ map.on('load', function() {
  d3.json('scripts/collisions/collisions.geojson', function(err, resp){
   if (err) throw err
   resp.features = resp.features.filter(function(ft){return typeof ft.geometry.coordinates[0] === 'number'})
@@ -152,10 +170,7 @@ map.on('load', function() {
    'type':'circle',
    'source': {
     'type': 'geojson',
-    'data': {
-     "type": "FeatureCollection",
-     "features": []
-    }
+    'data': emptyGeojson
    },
    'paint':{
     'circle-radius':3
@@ -166,10 +181,7 @@ map.on('load', function() {
    'type':'fill',
    'source': {
     'type': 'geojson',
-    'data': {
-     "type": "FeatureCollection",
-     "features": []
-    }
+    'data': emptyGeojson
    },
    'paint':{
     'fill-opacity':0.25,
