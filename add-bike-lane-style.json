@@ -14,8 +14,16 @@
   },
   "sources": {
     "composite": {
-      "url": "mapbox://mapbox.mapbox-streets-v8,mapbox.mapbox-terrain-v2,nicki.daq6vzck,nicki.cbufwres,nicki.382btzl6,k-mahoney.9p18idhz,nicki.8a8nff82",
+      "url": "mapbox://mapbox.mapbox-streets-v8,mapbox.mapbox-terrain-v2,k-mahoney.9p18idhz,nicki.8a8nff82",
       "type": "vector"
+    },
+    "bike-lanes": {
+      "type": "geojson",
+      "data": "./scripts/bike-lanes/Bicycle_Lanes.geojson"
+    },
+    "bike-trails": {
+      "type": "geojson",
+      "data": "./scripts/bike-trails/Bike_Trails.geojson"
     }
   },
   "sprite": "mapbox://sprites/nicki/cjrfg5dvs73d42so15dr0qp5u",
@@ -1644,20 +1652,18 @@
     {
       "id": "bike-trails",
       "type": "line",
-      "source": "composite",
-      "source-layer": "Bike_Trails-9q5bth",
+      "source": "bike-trails",
       "layout": {},
       "paint": {
         "line-color": "hsl(110, 45%, 40%)",
         "line-width": ["interpolate", ["exponential", 1.5], ["zoom"], 12, 1, 18, 4],
-        "line-dasharray": ["step", ["zoom"], ["literal", [3, 1]], 11, ["literal", [3, 1]], 13, ["literal", [3, 1]]]
+        "line-dasharray": [3, 1]
       }
     },
     {
       "id": "bike-lanes-dedicated",
       "type": "line",
-      "source": "composite",
-      "source-layer": "Bicycle_Lanes-dp63et",
+      "source": "bike-lanes",
       "filter": [
         "in",
         "FACILITY",
@@ -1710,8 +1716,7 @@
         "id": "bike-lanes-contraflow-label",
         "type": "symbol",
         "metadata": {},
-        "source": "composite",
-        "source-layer": "Bicycle_Lanes-dp63et",
+        "source": "bike-lanes",
         "filter": ["==", "FACILITY", "Contraflow Bike Lane"],
         "layout": {
             "text-field": "CONTRAFLOW",
@@ -1883,8 +1888,7 @@
     {
       "id": "bike-trails-label",
       "type": "symbol",
-      "source": "composite",
-      "source-layer": "Bike_Trails-9q5bth",
+      "source": "bike-trails",
       "layout": {
         "text-field": ["get", "NAME"],
         "text-size": [
