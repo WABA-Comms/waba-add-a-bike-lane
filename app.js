@@ -13,7 +13,47 @@ var map = new mapboxgl.Map({
 
 //gl-draw setup
 var draw = new MapboxDraw({
- displayControlsDefault: false
+ displayControlsDefault: false,
+ styles: [
+   {
+     "id": "gl-draw-line-active",
+     "type": "line",
+     "filter": ["all", ["==", "$type", "LineString"], ["==", "active", "true"]],
+     "layout": { "line-join": "round", "line-cap": "round" },
+     "paint": {
+       "line-color": "hsl(24, 85%, 50%)",
+       "line-width": { "type": "exponential", "base": 1.5, "stops": [[12, 1],[18, 4]] }
+     }
+  },
+   {
+     "id": "gl-draw-line-static",
+     "type": "line",
+     "filter": ["all", ["==", "$type", "LineString"], ["==", "active", "false"]],
+     "layout": { "line-join": "round", "line-cap": "round" },
+     "paint": {
+       "line-color": "hsl(24, 85%, 50%)",
+       "line-width": { "type": "exponential", "base": 1.5, "stops": [[12, 1],[18, 4]] }
+     }
+  },
+  {
+    "id": "gl-draw-line-vertex-halo-active",
+    "type": "circle",
+    "filter": ["all", ["==", "meta", "vertex"], ["==", "$type", "Point"], ["!=", "mode", "static"]],
+    "paint": {
+      "circle-radius": 6,
+      "circle-color": "#fff"
+    }
+  },
+  {
+    "id": "gl-draw-line-vertex-active",
+    "type": "circle",
+    "filter": ["all", ["==", "meta", "vertex"], ["==", "$type", "Point"], ["!=", "mode", "static"]],
+    "paint": {
+      "circle-radius": 4,
+      "circle-color": "hsl(24, 85%, 50%)",
+    }
+  }
+ ]
 });
 map.addControl(draw);
 
@@ -24,7 +64,7 @@ d3.select('#add')
 
 d3.select('#clear')
  .on('click', function(){
-  
+
   draw.deleteAll();
 
   map.getSource('collisions')
@@ -166,17 +206,6 @@ d3.select('#clear')
   // although it would make data updates easier if we didn't reformat it...
   map
   .addLayer({
-   'id':'collisions',
-   'type':'circle',
-   'source': {
-    'type': 'geojson',
-    'data': emptyGeojson
-   },
-   'paint':{
-    'circle-radius':3
-   }
-  })
-  .addLayer({
    'id':'buffer',
    'type':'fill',
    'source': {
@@ -184,8 +213,20 @@ d3.select('#clear')
     'data': emptyGeojson
    },
    'paint':{
-    'fill-opacity':0.25,
-    'fill-color': '#abcdef'
+    'fill-opacity':0.2,
+    'fill-color': 'hsl(24, 100%, 70%)'
+   }
+  })
+  .addLayer({
+   'id':'collisions',
+   'type':'circle',
+   'source': {
+    'type': 'geojson',
+    'data': emptyGeojson
+   },
+   'paint':{
+    'circle-radius': ['interpolate', ['linear'], ['zoom'], 12, 2, 18, 4],
+    'circle-opacity':0.25,
    }
   })
 
@@ -200,17 +241,17 @@ d3.select('#clear')
   map.on('draw.create', updateCorridor);
   map.on('draw.delete', updateCorridor);
   map.on('draw.update', updateCorridor);
-  
+
   function updateCorridor(e) {
 
    corridor = turf.truncate(draw.getAll());
 
    encodeHash();
    // Currently, this allows you to draw multiple unconnected lines as a "corridor"
-   bufferedCorridor = turf.buffer(corridor, 10, {units: 'meters'});
+   bufferedCorridor = turf.buffer(corridor, 20, {units: 'meters'});
    drawBuffer(bufferedCorridor)
    drawCollisions(turf.pointsWithinPolygon(collisions, bufferedCorridor));
-   map.fitBounds(turf.bbox(bufferedCorridor), {padding:{left:400, top:20, right:20, bottom:20}})
+   map.fitBounds(turf.bbox(bufferedCorridor), {padding:{left:400, top:40, right:40, bottom:40}})
 
     for (item in corridorInfo) {
      // Type: Point
@@ -256,7 +297,7 @@ d3.select('#clear')
        }
        var data = total ? percentage : count;
       }
-     }  
+     }
 
      if (document.getElementById('corridor-info-table').rows.length > item) {
       var row = document.getElementById(corridorInfo[item].id);
@@ -358,7 +399,7 @@ d3.select('#clear')
   function decodeHash(){
 
    var hash = window.location.hash;
-   
+
    if (hash.length < 3) return;
 
    var decodedGeometry = hash
