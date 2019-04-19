@@ -69,7 +69,7 @@
           "airport",
           "hsl(0, 0%, 88%)",
           "hsl(110, 6%, 90%)"
-        ]  
+        ]
       }
     },
     {
@@ -167,7 +167,7 @@
             ],
             true,
             false
-          ],  
+          ],
           15,
           [
             "match",
@@ -482,7 +482,7 @@
             ],
             true,
             false
-          ],  
+          ],
           15,
           [
             "match",
@@ -1041,7 +1041,7 @@
             ],
             true,
             false
-          ],  
+          ],
           15,
           [
             "match",
@@ -1357,7 +1357,7 @@
             ],
             true,
             false
-          ],  
+          ],
           15,
           [
             "match",
@@ -1681,21 +1681,6 @@
       }
     },
     {
-      "id": "bike-lanes-contraflow-arrow",
-      "type": "symbol",
-      "source": "composite",
-      "source-layer": "Bicycle_Lanes-dp63et",
-      "minzoom": 15,
-      "filter": ["==", "FACILITY", "Contraflow Bike Lane"],
-      "layout": {
-          "icon-image": "oneway-bike",
-          "symbol-placement": "line",
-          "symbol-spacing": 100,
-          "icon-rotate": 180
-      },
-      "paint": {}
-    },
-    {
       "id": "oneway-large",
       "type": "symbol",
       "source": "composite",
@@ -1718,8 +1703,31 @@
           ]
         ]
       ],
-      "layout": {"icon-image": "oneway", "symbol-placement": "line"},
+      "layout": {"icon-image": "oneway", "symbol-placement": "line", "symbol-spacing": 200},
       "paint": {}
+    },
+    {
+        "id": "bike-lanes-contraflow-label",
+        "type": "symbol",
+        "metadata": {},
+        "source": "composite",
+        "source-layer": "Bicycle_Lanes-dp63et",
+        "filter": ["==", "FACILITY", "Contraflow Bike Lane"],
+        "layout": {
+            "text-field": "CONTRAFLOW",
+            "text-font": [
+                "DIN Offc Pro Medium",
+                "Arial Unicode MS Regular"
+            ],
+            "text-size": 10,
+            "symbol-spacing": 100,
+            "symbol-placement": "line"
+        },
+        "paint": {
+            "text-color": "hsl(204, 70%, 45%)",
+            "text-halo-width": 1.5,
+            "text-halo-color": "hsl(0, 0%, 100%)"
+        }
     },
     {
       "id": "road-label",
