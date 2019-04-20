@@ -14,7 +14,7 @@
   },
   "sources": {
     "composite": {
-      "url": "mapbox://mapbox.mapbox-streets-v8,mapbox.mapbox-terrain-v2,k-mahoney.9p18idhz,nicki.8a8nff82",
+      "url": "mapbox://mapbox.mapbox-streets-v8,k-mahoney.9p18idhz,nicki.8a8nff82",
       "type": "vector"
     }
   },
