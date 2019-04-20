@@ -285,7 +285,7 @@ d3.select('#clear')
         'text-halo-color': 'hsl(0, 0%, 100%)'
     }
   }, 'road-label')
-  // Add bike trail labels layer directly before waterway label layer in map style
+  // Add bike trail labels layer directly before settlement subdivision label layer in map style
   .addLayer({
     'id': 'bike-trails-label',
     'type': 'symbol',
@@ -324,7 +324,7 @@ d3.select('#clear')
       'text-halo-color': 'hsl(0, 0%, 100%)',
       'text-halo-blur': 0.5
     }
-  }, 'waterway-label')
+  }, 'settlement-subdivision-label')
   // Add buffer layer after all other layers
   .addLayer({
    'id':'buffer',
