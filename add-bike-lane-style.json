@@ -16,14 +16,6 @@
     "composite": {
       "url": "mapbox://mapbox.mapbox-streets-v8,mapbox.mapbox-terrain-v2,k-mahoney.9p18idhz,nicki.8a8nff82",
       "type": "vector"
-    },
-    "bike-lanes": {
-      "type": "geojson",
-      "data": "./scripts/bike-lanes/Bicycle_Lanes.geojson"
-    },
-    "bike-trails": {
-      "type": "geojson",
-      "data": "./scripts/bike-trails/Bike_Trails.geojson"
     }
   },
   "sprite": "mapbox://sprites/nicki/cjrfg5dvs73d42so15dr0qp5u",
@@ -1650,44 +1642,7 @@
       }
     },
     {
-      "id": "bike-trails",
-      "type": "line",
-      "source": "bike-trails",
-      "layout": {},
-      "paint": {
-        "line-color": "hsl(110, 45%, 40%)",
-        "line-width": ["interpolate", ["exponential", 1.5], ["zoom"], 12, 1, 18, 4],
-        "line-dasharray": [3, 1]
-      }
-    },
-    {
-      "id": "bike-lanes-dedicated",
-      "type": "line",
-      "source": "bike-lanes",
-      "filter": [
-        "in",
-        "FACILITY",
-        "Climbing Lane",
-        "Contraflow Bike Lane",
-        "Cycle Track",
-        "Existing Bike Lane"
-      ],
-      "layout": {"line-join": "round", "line-cap": "round"},
-      "paint": {
-        "line-color": "hsl(204, 70%, 55%)",
-        "line-width": [
-          "interpolate",
-          ["exponential", 1.5],
-          ["zoom"],
-          12,
-          ["match", ["get", "FACILITY"], "Cycle Track", 2, 1],
-          18,
-          ["match", ["get", "FACILITY"], "Cycle Track", 24, 4]
-        ]
-      }
-    },
-    {
-      "id": "oneway-large",
+      "id": "oneway",
       "type": "symbol",
       "source": "composite",
       "source-layer": "road",
@@ -1711,28 +1666,6 @@
       ],
       "layout": {"icon-image": "oneway", "symbol-placement": "line", "symbol-spacing": 200},
       "paint": {}
-    },
-    {
-        "id": "bike-lanes-contraflow-label",
-        "type": "symbol",
-        "metadata": {},
-        "source": "bike-lanes",
-        "filter": ["==", "FACILITY", "Contraflow Bike Lane"],
-        "layout": {
-            "text-field": "CONTRAFLOW",
-            "text-font": [
-                "DIN Offc Pro Medium",
-                "Arial Unicode MS Regular"
-            ],
-            "text-size": 10,
-            "symbol-spacing": 100,
-            "symbol-placement": "line"
-        },
-        "paint": {
-            "text-color": "hsl(204, 70%, 45%)",
-            "text-halo-width": 1.5,
-            "text-halo-color": "hsl(0, 0%, 100%)"
-        }
     },
     {
       "id": "road-label",
@@ -1876,45 +1809,6 @@
         "text-rotation-alignment": "map",
         "text-pitch-alignment": "viewport",
         "text-field": ["coalesce", ["get", "name_en"], ["get", "name"]],
-        "text-letter-spacing": 0.01
-      },
-      "paint": {
-        "text-color": "hsl(0, 0%, 30%)",
-        "text-halo-width": 1,
-        "text-halo-color": "hsl(0, 0%, 100%)",
-        "text-halo-blur": 0.5
-      }
-    },
-    {
-      "id": "bike-trails-label",
-      "type": "symbol",
-      "source": "bike-trails",
-      "layout": {
-        "text-field": ["get", "NAME"],
-        "text-size": [
-          "interpolate",
-          ["linear"],
-          ["zoom"],
-          10,
-          10,
-          18,
-          16
-        ],
-        "text-offset": [
-          "interpolate",
-          ["linear"],
-          ["zoom"],
-          12,
-          ["literal", [0, 0.55]],
-          18,
-          ["literal", [0, 0.625]]
-        ],
-        "text-max-angle": 30,
-        "text-font": ["DIN Offc Pro Regular", "Arial Unicode MS Regular"],
-        "symbol-placement": "line",
-        "text-padding": 6,
-        "text-rotation-alignment": "map",
-        "text-pitch-alignment": "viewport",
         "text-letter-spacing": 0.01
       },
       "paint": {
