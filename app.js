@@ -11,9 +11,51 @@ var map = new mapboxgl.Map({
 
 });
 
-//gl-draw setup
+// gl-draw setup
+// which includes style definitions for the drawn line
+// that represents the proposed bike lane
 var draw = new MapboxDraw({
- displayControlsDefault: false
+ displayControlsDefault: false,
+ styles: [
+   {
+     "id": "gl-draw-line-active",
+     "type": "line",
+     "filter": ["all", ["==", "$type", "LineString"], ["==", "active", "true"]],
+     "layout": { "line-join": "round", "line-cap": "round" },
+     "paint": {
+       "line-color": "hsl(24, 85%, 50%)",
+       "line-width": { "type": "exponential", "base": 1.5, "stops": [[12, 1],[18, 4]] }
+     }
+  },
+   {
+     "id": "gl-draw-line-static",
+     "type": "line",
+     "filter": ["all", ["==", "$type", "LineString"], ["==", "active", "false"]],
+     "layout": { "line-join": "round", "line-cap": "round" },
+     "paint": {
+       "line-color": "hsl(24, 85%, 50%)",
+       "line-width": { "type": "exponential", "base": 1.5, "stops": [[12, 1],[18, 4]] }
+     }
+  },
+  {
+    "id": "gl-draw-line-vertex-halo-active",
+    "type": "circle",
+    "filter": ["all", ["==", "meta", "vertex"], ["==", "$type", "Point"], ["!=", "mode", "static"]],
+    "paint": {
+      "circle-radius": 6,
+      "circle-color": "#fff"
+    }
+  },
+  {
+    "id": "gl-draw-line-vertex-active",
+    "type": "circle",
+    "filter": ["all", ["==", "meta", "vertex"], ["==", "$type", "Point"], ["!=", "mode", "static"]],
+    "paint": {
+      "circle-radius": 4,
+      "circle-color": "hsl(24, 85%, 50%)",
+    }
+  }
+ ]
 });
 map.addControl(draw);
 
@@ -24,7 +66,7 @@ d3.select('#add')
 
 d3.select('#clear')
  .on('click', function(){
-  
+
   draw.deleteAll();
 
   map.getSource('collisions')
@@ -157,25 +199,133 @@ d3.select('#clear')
     }
   ];
 
-
-  // Since we are planning to also visualize the corridor data on the map, it's probably
-  // easiest to reuse the vector tiles for data querying.
-
   // TODO: filter these crash queries to only include 2016 and later
   // However, the `REPORTDATE` field contains string values, not numbers, so we may want to reformat these first
   // although it would make data updates easier if we didn't reformat it...
+
+  // At runtime, add additional features to the map that depend on
+  // data contained in this project:
+  // - existing bike lane and trails
+  // - visualization of crashes along corridor of proposed bike lane
+  // - visualization of buffer around proposed bike lane
   map
+  .addSource(
+    'bike-lanes',
+    {
+      'type': 'geojson',
+      'data': './scripts/bike-lanes/Bicycle_Lanes.geojson'
+    }
+  )
+  .addSource(
+    'bike-trails',
+    {
+      'type': 'geojson',
+      'data': './scripts/bike-trails/Bike_Trails.geojson'
+    }
+  )
+  // Add bike trails layer directly before oneway layer in map style
   .addLayer({
-   'id':'collisions',
-   'type':'circle',
-   'source': {
-    'type': 'geojson',
-    'data': emptyGeojson
-   },
-   'paint':{
-    'circle-radius':3
-   }
-  })
+    'id': 'bike-trails',
+    'type': 'line',
+    'source': 'bike-trails',
+    'layout': {},
+    'paint': {
+      'line-color': 'hsl(110, 45%, 40%)',
+      'line-width': ['interpolate', ['exponential', 1.5], ['zoom'], 12, 1, 18, 4],
+      'line-dasharray': [3, 1]
+    }
+  }, 'oneway')
+  // Add bike lanes layer directly before oneway layer in map style
+  .addLayer({
+    'id': 'bike-lanes-dedicated',
+    'type': 'line',
+    'source': 'bike-lanes',
+    'filter': [
+      'in',
+      'FACILITY',
+      'Climbing Lane',
+      'Contraflow Bike Lane',
+      'Cycle Track',
+      'Existing Bike Lane'
+    ],
+    'layout': {'line-join': 'round', 'line-cap': 'round'},
+    'paint': {
+      'line-color': 'hsl(204, 70%, 55%)',
+      'line-width': [
+        'interpolate',
+        ['exponential', 1.5],
+        ['zoom'],
+        12,
+        ['match', ['get', 'FACILITY'], 'Cycle Track', 2, 1],
+        18,
+        ['match', ['get', 'FACILITY'], 'Cycle Track', 24, 4]
+      ]
+    }
+  }, 'oneway')
+  // Add contraflow label layer directly before road label layer in map style
+  .addLayer({
+    'id': 'bike-lanes-contraflow-label',
+    'type': 'symbol',
+    'metadata': {},
+    'source': 'bike-lanes',
+    'filter': ['==', 'FACILITY', 'Contraflow Bike Lane'],
+    'layout': {
+        'text-field': 'CONTRAFLOW',
+        'text-font': [
+            'DIN Offc Pro Medium',
+            'Arial Unicode MS Regular'
+        ],
+        'text-size': 10,
+        'symbol-spacing': 100,
+        'symbol-placement': 'line'
+    },
+    'paint': {
+        'text-color': 'hsl(204, 70%, 45%)',
+        'text-halo-width': 1.5,
+        'text-halo-color': 'hsl(0, 0%, 100%)'
+    }
+  }, 'road-label')
+  // Add bike trail labels layer directly before settlement subdivision label layer in map style
+  .addLayer({
+    'id': 'bike-trails-label',
+    'type': 'symbol',
+    'source': 'bike-trails',
+    'layout': {
+      'text-field': ['get', 'NAME'],
+      'text-size': [
+        'interpolate',
+        ['linear'],
+        ['zoom'],
+        10,
+        10,
+        18,
+        16
+      ],
+      'text-offset': [
+        'interpolate',
+        ['linear'],
+        ['zoom'],
+        12,
+        ['literal', [0, 0.55]],
+        18,
+        ['literal', [0, 0.625]]
+      ],
+      'text-max-angle': 30,
+      'text-font': ['DIN Offc Pro Regular', 'Arial Unicode MS Regular'],
+      'symbol-placement': 'line',
+      'text-padding': 6,
+      'text-rotation-alignment': 'map',
+      'text-pitch-alignment': 'viewport',
+      'text-letter-spacing': 0.01
+    },
+    'paint': {
+      'text-color': 'hsl(0, 0%, 30%)',
+      'text-halo-width': 1,
+      'text-halo-color': 'hsl(0, 0%, 100%)',
+      'text-halo-blur': 0.5
+    }
+  }, 'settlement-subdivision-label')
+  // Add buffer layer after all other layers
   .addLayer({
    'id':'buffer',
    'type':'fill',
@@ -184,8 +334,21 @@ d3.select('#clear')
     'data': emptyGeojson
    },
    'paint':{
-    'fill-opacity':0.25,
-    'fill-color': '#abcdef'
+    'fill-opacity': 0.2,
+    'fill-color': 'hsl(24, 100%, 70%)'
+   }
+  })
+  // Add collisions (crashes) layer after all other layers
+  .addLayer({
+   'id':'collisions',
+   'type':'circle',
+   'source': {
+    'type': 'geojson',
+    'data': emptyGeojson
+   },
+   'paint':{
+    'circle-radius': ['interpolate', ['linear'], ['zoom'], 12, 2, 18, 4],
+    'circle-opacity': 0.25
    }
   })
 
@@ -200,17 +363,17 @@ d3.select('#clear')
   map.on('draw.create', updateCorridor);
   map.on('draw.delete', updateCorridor);
   map.on('draw.update', updateCorridor);
-  
+
   function updateCorridor(e) {
 
    corridor = turf.truncate(draw.getAll());
 
    encodeHash();
    // Currently, this allows you to draw multiple unconnected lines as a "corridor"
-   bufferedCorridor = turf.buffer(corridor, 10, {units: 'meters'});
+   bufferedCorridor = turf.buffer(corridor, 20, {units: 'meters'});
    drawBuffer(bufferedCorridor)
    drawCollisions(turf.pointsWithinPolygon(collisions, bufferedCorridor));
-   map.fitBounds(turf.bbox(bufferedCorridor), {padding:{left:400, top:20, right:20, bottom:20}})
+   map.fitBounds(turf.bbox(bufferedCorridor), {padding:{left:400, top:40, right:40, bottom:40}})
 
     for (item in corridorInfo) {
      // Type: Point
@@ -256,7 +419,7 @@ d3.select('#clear')
        }
        var data = total ? percentage : count;
       }
-     }  
+     }
 
      if (document.getElementById('corridor-info-table').rows.length > item) {
       var row = document.getElementById(corridorInfo[item].id);
@@ -270,7 +433,7 @@ d3.select('#clear')
       var more = row.insertCell(1);
      };
 
-     console.log(data);
+     //console.log(data);
 
      if (data.length == 1) desc.innerHTML =  corridorInfo[item].text + ': ' + '<span class="txt-bold">' + data[0] + '</span> ';
      else {
@@ -358,7 +521,7 @@ d3.select('#clear')
   function decodeHash(){
 
    var hash = window.location.hash;
-   
+
    if (hash.length < 3) return;
 
    var decodedGeometry = hash
