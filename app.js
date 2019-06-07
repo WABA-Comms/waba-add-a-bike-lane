@@ -156,13 +156,13 @@ d3.select('#clear')
      text: 'Income',
      secondaryText: [
       '<10k',
-      '10k – 15k',
+      '10k–15k',
       '15k–20k',
       '20k–25k',
       '25k–30k',
       '30k–35k',
       '35k–40k',
-      '40k–44k',
+      '40k–45k',
       '45k–50k',
       '50k–60k',
       '60k–75k',
@@ -454,9 +454,21 @@ d3.select('#clear')
 
       if (data.length === 1){
         title
+          .append('svg')
+          .attr('class', 'icon inline ml6 opacity50')
+          .html('<use xlink:href="#icon-question"/></svg>')
+        title
+          .append('svg')
+          .attr('class', 'icon inline opacity50')
+          .html('<use xlink:href="#icon-map"/>')
+
+        title
           .append('span')
           .text(data[0])
           .attr('class', 'fr')
+
+
+
       }
       else {
 
@@ -477,7 +489,14 @@ d3.select('#clear')
             return corridorInfo[item].secondaryText[i]
           })
           .attr('class', ' txt-s small py1')
-
+          .style('color', function(d,i){
+            var color = i === maxIndex ? '#448ee4' : 'black'
+            return color            
+          })
+          .classed('txt-bold', function(d,i){
+            var bold = i === maxIndex 
+            return bold            
+          })
 
         var bar = dataRow
           .append('div')
@@ -497,10 +516,12 @@ d3.select('#clear')
             var color = i === maxIndex ? 'color-white' : 'color-black'
             d3.select(this).classed(color, true)
           })
-
+          .classed('txt-bold', function(d,i){
+            var bold = i === maxIndex 
+            return bold            
+          })
         bar
           .append('div')
-          // .attr('class', 'round')
           .style('width', function(d){
             return 100 * d/data[maxIndex] + '%'
           })
