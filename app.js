@@ -534,77 +534,12 @@ d3.select('#clear')
 
       }
 
-    // if (document.getElementById('corridor-info-table').rows.length > item) {
-    //   var row = document.getElementById(corridorInfo[item].id);
-    //   var desc = row.cells[0];
-    //   var more = row.cells[1];
-    // } else {
-    //   var row = document.getElementById('corridor-info-table').insertRow(-1);
-    //   row.id = corridorInfo[item].id;
-    //   //console.log("Added row in corridor info table: " + row.id);
-    //   var desc = row.insertCell(0);
-    //   var more = row.insertCell(1);
-    // };
 
-
-    // if (data.length == 1) desc.innerHTML =  corridorInfo[item].text + ': ' + '<span class="txt-bold">' + data[0] + '</span> ';
-    // else {
-
-
-
-    //   // // TODO: Add additional rows for the sub-items
-    //   // desc.innerHTML =  corridorInfo[item].text + '</br>';
-    //   // for (j in corridorInfo[item].secondaryText) {
-    //   //  desc.innerHTML += '<p class=secondaryText>' + corridorInfo[item].secondaryText[j] + ': ' + '<span class="txt-bold">' + data[j] + '%</span></p>';
-    //   //  //var secondaryText = document.createElement('p');
-    //   //  //secondaryText.innerHTML = '<p>' + corridorInfo[item].secondaryText[j] + ': ' + '<span class="txt-bold">' + data[j] + '</span></p>';
-    //   //  //desc.appendChild(secondaryText);
-    //   // }
-    // };
-     // "More" section is a placeholder for accessing:
-     // 1. Information about the data the statistic was derived from
-     // (we could also consolidate all the data info in one place elsewhere)
-     // 2. Toggling on/off visualizations on the map for that statistic
-     // more.innerHTML = '<svg class="icon inline"><use xlink:href="#icon-question"/></svg> <svg class="icon inline"><use xlink:href="#icon-map"/></svg>'
     };
     document.getElementById('corridor-info').style.visibility = 'visible';
 
   }
 
-   //console.log(corridorInfo[2]);
-  //console.log(corridorInfo[3]);
-
-  // Display census data on map to help debug
-  /*
-  map.addLayer(
-   {
-    "id": "census-blocks",
-    "source": "composite",
-    "source-layer": "combined_features-7kmirr",
-    "type": "line",
-    "paint": {
-     "line-color": "#0f0",
-     "line-opacity": 1
-    }
-   }
-  );
-  map.addLayer(
-   {
-    "id": "census-blocks-population",
-    "source": "composite",
-    "source-layer": "combined_features-7kmirr",
-    "type": "symbol",
-    "layout": {
-     "text-field": ["get", "population_total"],
-     "symbol-placement": "point",
-     "text-size": 10
-    },
-    "paint": {
-     "text-color": "red"
-    }
-   }
-  );
-  */
 
   function drawBuffer(geojson){
    map.getSource('buffer')
