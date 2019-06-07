@@ -55,8 +55,7 @@ var draw = new MapboxDraw({
       "circle-color": "hsl(24, 85%, 50%)",
     }
   }
- ]
-});
+ ]});
 map.addControl(draw);
 
 d3.select('#add')
@@ -66,7 +65,7 @@ d3.select('#add')
 
 d3.select('#clear')
  .on('click', function(){
-
+  
   draw.deleteAll();
 
   map.getSource('collisions')
@@ -86,13 +85,13 @@ d3.select('#clear')
   corridorInfo = [
    {
     id: 'crashes-total',
-    text: 'total crashes',
+    text: 'Total crashes',
       geomType: 'point',
     data: collisions
    },
    {
     id: 'crashes-cyclists',
-    text: 'bike-related crashes',
+    text: 'Bike-related crashes',
      geomType: 'point',
     data: turf.featureCollection(collisions.features.filter(function(ft){
      return ft.properties.TOTAL_BICYCLES > 0
@@ -100,7 +99,7 @@ d3.select('#clear')
    },
    {
     id: 'crashes-pedestrians',
-    text: 'pedestrian-related crashes',
+    text: 'Pedestrian-related crashes',
       geomType: 'point',
     data: turf.featureCollection(collisions.features.filter(function(ft){
      return ft.properties.TOTAL_PEDESTRIANS > 0
@@ -129,13 +128,13 @@ d3.select('#clear')
      id: 'modeshare',
      text: 'Modeshare',
      secondaryText: [
-      'Bicycle',
+      'Cycling',
       'Walking',
-      'Automobile',
+      'Driving',
       'Motorcycle',
-      'Public transportation',
-      'Taxicab',
-      'Other means'
+      'Public trans.',
+      'Taxi',
+      'Other'
      ],
      geomType: 'polygon',
      data: turf.featureCollection(map.querySourceFeatures('composite', {
@@ -156,22 +155,22 @@ d3.select('#clear')
      id: 'income',
      text: 'Income',
      secondaryText: [
-      '<10,000',
-      '10,000–14,999',
-      '15,000–19,999',
-      '20,000–24,999',
-      '25,000–29,999',
-      '30,000–34,999',
-      '35,000–39,999',
-      '40,000–44,999',
-      '45,000–49,999',
-      '50,000–59,999',
-      '60,000–74,999',
-      '75,000–99,999',
-      '100,000–124,999',
-      '125,000–149,999',
-      '150,000–199,999',
-      '>200,000'
+      '<10k',
+      '10k–15k',
+      '15k–20k',
+      '20k–25k',
+      '25k–30k',
+      '30k–35k',
+      '35k–40k',
+      '40k–45k',
+      '45k–50k',
+      '50k–60k',
+      '60k–75k',
+      '75k–100k',
+      '100k–125k',
+      '125k–150k',
+      '150k–200k',
+      '>200k'
      ],
      geomType: 'polygon',
      data: turf.featureCollection(map.querySourceFeatures('composite', {
@@ -202,6 +201,7 @@ d3.select('#clear')
   // TODO: filter these crash queries to only include 2016 and later
   // However, the `REPORTDATE` field contains string values, not numbers, so we may want to reformat these first
   // although it would make data updates easier if we didn't reformat it...
+
 
   // At runtime, add additional features to the map that depend on
   // data contained in this project:
@@ -338,7 +338,6 @@ d3.select('#clear')
     'fill-color': 'hsl(24, 100%, 70%)'
    }
   })
-  // Add collisions (crashes) layer after all other layers
   .addLayer({
    'id':'collisions',
    'type':'circle',
@@ -347,8 +346,8 @@ d3.select('#clear')
     'data': emptyGeojson
    },
    'paint':{
-    'circle-radius': ['interpolate', ['linear'], ['zoom'], 12, 2, 18, 4],
-    'circle-opacity': 0.25
+      'circle-radius': ['interpolate', ['linear'], ['zoom'], 12, 2, 18, 4],
+      'circle-opacity': 0.25
    }
   })
 
@@ -363,9 +362,10 @@ d3.select('#clear')
   map.on('draw.create', updateCorridor);
   map.on('draw.delete', updateCorridor);
   map.on('draw.update', updateCorridor);
-
+  
   function updateCorridor(e) {
-
+      d3.selectAll('#corridor-info *')
+        .remove();
    corridor = turf.truncate(draw.getAll());
 
    encodeHash();
@@ -373,124 +373,173 @@ d3.select('#clear')
    bufferedCorridor = turf.buffer(corridor, 20, {units: 'meters'});
    drawBuffer(bufferedCorridor)
    drawCollisions(turf.pointsWithinPolygon(collisions, bufferedCorridor));
-   map.fitBounds(turf.bbox(bufferedCorridor), {padding:{left:400, top:40, right:40, bottom:40}})
 
+   map.fitBounds(turf.bbox(bufferedCorridor), {padding:{left:400, top:40, right:40, bottom:40}})
+    
     for (item in corridorInfo) {
+
      // Type: Point
      if (corridorInfo[item].geomType === "point") {
       var data = [turf.pointsWithinPolygon(corridorInfo[item].data, bufferedCorridor).features.length];
      }
 
      // Type: Polygon
-     if (corridorInfo[item].geomType === "polygon") {
+      if (corridorInfo[item].geomType === "polygon") {
+
       var dataFields = corridorInfo[item].dataFields;
       var count = [];
       var total = corridorInfo[item].total;
-      if (total) {
-       var totalCount = 0;
-      }
+
+      if (total) var totalCount = 0;
+
       dataFields.forEach(function() {
        count.push(0);
       })
+
       // Iterate through features to check for corridor overlap
-      //console.log(corridorInfo[item]);
+
       for (i in corridorInfo[item].data.features) {
-       var feature = corridorInfo[item].data.features[i];
-       //console.log(feature);
-       // We should be able to use the relatively new booleanIntersects function,
-       // which is the inverse of booleanDisjoint,
-       // but for some reason it isn't recognized.
-       //if (!turf.booleanDisjoint(bufferedCorridor.features[0].geometry, feature)) {
-       if (!turf.booleanDisjoint(bufferedCorridor, feature)) {
-        //console.log(feature.properties[measurements[0]]);
-        // TODO: dedupe tiles using GEOID property (this is unique by block. Is there a better property?)
-        // TODO: add optional % calculation
-        // TODO: figure out why this function does not seem to capture all intersecting census blocks
-        for (j in dataFields) {
-        count[j] += +feature.properties[dataFields[j]];
-        }
-        if (total) {
-         var percentage = [];
-         totalCount += +feature.properties[total];
-         for (j in dataFields) {
-         percentage.push(Math.round(+count[j] / totalCount * 100));
-         }
-        }
-       }
+
+        var feature = corridorInfo[item].data.features[i];
+
+        //console.log(feature);
+        // We should be able to use the relatively new booleanIntersects function,
+        // which is the inverse of booleanDisjoint,
+        // but for some reason it isn't recognized.
+        //if (!turf.booleanDisjoint(bufferedCorridor.features[0].geometry, feature)) {
+        if (!turf.booleanDisjoint(bufferedCorridor, feature)) {
+        
+          //console.log(feature.properties[measurements[0]]);
+          // TODO: dedupe tiles using GEOID property (this is unique by block. Is there a better property?)
+          // TODO: add optional % calculation
+          // TODO: figure out why this function does not seem to capture all intersecting census blocks
+          
+          for (j in dataFields) {
+            count[j] += +feature.properties[dataFields[j]];
+          }
+
+          if (total) {
+           var percentage = [];
+           totalCount += +feature.properties[total];
+            for (j in dataFields) {
+              percentage.push(Math.round(+count[j] / totalCount * 100));
+            }
+          }
+      }
        var data = total ? percentage : count;
       }
-     }
+    }  
+      console.log(corridorInfo[item].id, data[0]);
+      var maxIndex = 0;
 
-     if (document.getElementById('corridor-info-table').rows.length > item) {
-      var row = document.getElementById(corridorInfo[item].id);
-      var desc = row.cells[0];
-      var more = row.cells[1];
-     } else {
-      var row = document.getElementById('corridor-info-table').insertRow(-1);
-      row.id = corridorInfo[item].id;
-      //console.log("Added row in corridor info table: " + row.id);
-      var desc = row.insertCell(0);
-      var more = row.insertCell(1);
-     };
 
-     //console.log(data);
 
-     if (data.length == 1) desc.innerHTML =  corridorInfo[item].text + ': ' + '<span class="txt-bold">' + data[0] + '</span> ';
-     else {
-      console.log(data);
-      // TODO: Add additional rows for the sub-items
-      desc.innerHTML =  corridorInfo[item].text + '</br>';
-      for (j in corridorInfo[item].secondaryText) {
-       desc.innerHTML += '<p class=secondaryText>' + corridorInfo[item].secondaryText[j] + ': ' + '<span class="txt-bold">' + data[j] + '%</span></p>';
-       //var secondaryText = document.createElement('p');
-       //secondaryText.innerHTML = '<p>' + corridorInfo[item].secondaryText[j] + ': ' + '<span class="txt-bold">' + data[j] + '</span></p>';
-       //desc.appendChild(secondaryText);
+      for (index in data) {
+        if (data[index] > data[maxIndex]){maxIndex = parseFloat(index)}
       }
-     };
-     // "More" section is a placeholder for accessing:
-     // 1. Information about the data the statistic was derived from
-     // (we could also consolidate all the data info in one place elsewhere)
-     // 2. Toggling on/off visualizations on the map for that statistic
-     more.innerHTML = '<svg class="icon inline"><use xlink:href="#icon-question"/></svg> <svg class="icon inline"><use xlink:href="#icon-map"/></svg>'
+
+
+      var section = d3.select('#corridor-info')
+        .append('div')
+        .attr('id', corridorInfo[item].id)
+
+      var title = section
+        .append('div')
+        .classed('mt12', true);
+
+      title
+        .append('span')
+        .classed('txt-bold', true)
+        .text(corridorInfo[item].text)
+
+      if (data.length === 1){
+        title
+          .append('svg')
+          .attr('class', 'icon inline ml6 opacity50')
+          .html('<use xlink:href="#icon-question"/></svg>')
+        title
+          .append('svg')
+          .attr('class', 'icon inline opacity50')
+          .html('<use xlink:href="#icon-map"/>')
+
+        title
+          .append('span')
+          .text(data[0])
+          .attr('class', 'fr')
+
+
+
+      }
+      else {
+
+        var dataRow = section
+          .selectAll('.dataRow')
+          .data(data)
+          .enter()
+          .append('div')
+          .attr('class', 'dataRow py1 mt6')
+          .style('height', '18px')
+
+        dataRow
+          .append('div')
+          .style('width', '30%')
+          .style('display', 'inline-block')
+          .style('float', 'left')
+          .text(function(d,i) {
+            return corridorInfo[item].secondaryText[i]
+          })
+          .attr('class', ' txt-s small py1')
+          .style('color', function(d,i){
+            var color = i === maxIndex ? '#448ee4' : 'black'
+            return color            
+          })
+          .classed('txt-bold', function(d,i){
+            var bold = i === maxIndex 
+            return bold            
+          })
+
+        var bar = dataRow
+          .append('div')
+          .style('width', '70%')
+          .style('display', 'inline-block')
+          .style('position', 'relative')
+          .style('float', 'right')
+          .style('height', '100%')
+
+        bar
+          .append('span')
+          .attr('class', 'z5 absolute py1 px6 txt-s')
+          .text(function(d){
+            return d+'%'
+          })
+          .each(function(d,i){
+            var color = i === maxIndex ? 'color-white' : 'color-black'
+            d3.select(this).classed(color, true)
+          })
+          .classed('txt-bold', function(d,i){
+            var bold = i === maxIndex 
+            return bold            
+          })
+        bar
+          .append('div')
+          .style('width', function(d){
+            return 100 * d/data[maxIndex] + '%'
+          })
+          .style('background-color', '#448ee4')
+          .style('height', '100%')
+          .each(function(d,i){
+            var color = i === maxIndex ? 'bg-blue-light' : 'bg-darken10'
+            d3.select(this).classed(color, true)
+          })
+
+      }
+
+
     };
     document.getElementById('corridor-info').style.visibility = 'visible';
 
   }
 
-   //console.log(corridorInfo[2]);
-  //console.log(corridorInfo[3]);
-
-  // Display census data on map to help debug
-  /*
-  map.addLayer(
-   {
-    "id": "census-blocks",
-    "source": "composite",
-    "source-layer": "combined_features-7kmirr",
-    "type": "line",
-    "paint": {
-     "line-color": "#0f0",
-     "line-opacity": 1
-    }
-   }
-  );
-  map.addLayer(
-   {
-    "id": "census-blocks-population",
-    "source": "composite",
-    "source-layer": "combined_features-7kmirr",
-    "type": "symbol",
-    "layout": {
-     "text-field": ["get", "population_total"],
-     "symbol-placement": "point",
-     "text-size": 10
-    },
-    "paint": {
-     "text-color": "red"
-    }
-   }
-  );
-  */
 
   function drawBuffer(geojson){
    map.getSource('buffer')
@@ -521,7 +570,7 @@ d3.select('#clear')
   function decodeHash(){
 
    var hash = window.location.hash;
-
+   
    if (hash.length < 3) return;
 
    var decodedGeometry = hash
