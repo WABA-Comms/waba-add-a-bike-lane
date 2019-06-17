@@ -65,7 +65,7 @@ d3.select('#add')
 
 d3.select('#clear')
  .on('click', function(){
-  
+
   draw.deleteAll();
 
   map.getSource('collisions')
@@ -73,6 +73,8 @@ d3.select('#clear')
 
   map.getSource('buffer')
    .setData(emptyGeojson);
+
+  document.getElementById('corridor-info').style.display = 'none';
  })
 
 
@@ -87,7 +89,8 @@ d3.select('#clear')
     id: 'crashes-total',
     text: 'Total crashes',
       geomType: 'point',
-    data: collisions
+    data: collisions,
+    attribution: 'Data attribution goes here.'
    },
    {
     id: 'crashes-cyclists',
@@ -95,7 +98,8 @@ d3.select('#clear')
      geomType: 'point',
     data: turf.featureCollection(collisions.features.filter(function(ft){
      return ft.properties.TOTAL_BICYCLES > 0
-    }))
+   })),
+   attribution: 'Data attribution goes here.'
    },
    {
     id: 'crashes-pedestrians',
@@ -103,7 +107,8 @@ d3.select('#clear')
       geomType: 'point',
     data: turf.featureCollection(collisions.features.filter(function(ft){
      return ft.properties.TOTAL_PEDESTRIANS > 0
-    }))
+   })),
+    attribution: 'Data attribution goes here.'
    },
     {
      id: 'speeding-violations',
@@ -113,7 +118,8 @@ d3.select('#clear')
       // Currently only Dec 2018 data
       sourceLayer: 'moving-violations-dec-2018-re-7lav76',
       filter: ['in', 'VIOLATIONCODE', "T118", "T119", "T120", "T121", "T122"]
-     }))
+    })),
+    attribution: 'Data attribution goes here.'
     },
     {
      id: 'population',
@@ -122,7 +128,8 @@ d3.select('#clear')
      data: turf.featureCollection(map.querySourceFeatures('composite', {
       sourceLayer: 'combined_features-7kmirr'
      })),
-     dataFields: ['population_total']
+     dataFields: ['population_total'],
+     attribution: 'Data attribution goes here.'
     },
     {
      id: 'modeshare',
@@ -149,7 +156,8 @@ d3.select('#clear')
       'transport_taxicab',
       'transport_other_means'
       ],
-     total: 'transport_total'
+     total: 'transport_total',
+     attribution: 'Data attribution goes here.'
     },
     {
      id: 'income',
@@ -194,7 +202,8 @@ d3.select('#clear')
       'income_150_000_to_199_999',
       'income_200_000_or_more'
       ],
-     total: 'income_total'
+     total: 'income_total',
+     attribution: 'Data attribution goes here.'
     }
   ];
 
@@ -362,11 +371,12 @@ d3.select('#clear')
   map.on('draw.create', updateCorridor);
   map.on('draw.delete', updateCorridor);
   map.on('draw.update', updateCorridor);
-  
+
   function updateCorridor(e) {
       d3.selectAll('#corridor-info *')
         .remove();
    corridor = turf.truncate(draw.getAll());
+   console.log(corridor);
 
    encodeHash();
    // Currently, this allows you to draw multiple unconnected lines as a "corridor"
@@ -375,7 +385,7 @@ d3.select('#clear')
    drawCollisions(turf.pointsWithinPolygon(collisions, bufferedCorridor));
 
    map.fitBounds(turf.bbox(bufferedCorridor), {padding:{left:400, top:40, right:40, bottom:40}})
-    
+
     for (item in corridorInfo) {
 
      // Type: Point
@@ -408,12 +418,12 @@ d3.select('#clear')
         // but for some reason it isn't recognized.
         //if (!turf.booleanDisjoint(bufferedCorridor.features[0].geometry, feature)) {
         if (!turf.booleanDisjoint(bufferedCorridor, feature)) {
-        
+
           //console.log(feature.properties[measurements[0]]);
           // TODO: dedupe tiles using GEOID property (this is unique by block. Is there a better property?)
           // TODO: add optional % calculation
           // TODO: figure out why this function does not seem to capture all intersecting census blocks
-          
+
           for (j in dataFields) {
             count[j] += +feature.properties[dataFields[j]];
           }
@@ -428,7 +438,7 @@ d3.select('#clear')
       }
        var data = total ? percentage : count;
       }
-    }  
+    }
       console.log(corridorInfo[item].id, data[0]);
       var maxIndex = 0;
 
@@ -443,31 +453,21 @@ d3.select('#clear')
         .append('div')
         .attr('id', corridorInfo[item].id)
 
-      var title = section
+      var sectionInner = section
         .append('div')
         .classed('mt12', true);
 
-      title
+      var title = sectionInner
         .append('span')
         .classed('txt-bold', true)
         .text(corridorInfo[item].text)
 
       if (data.length === 1){
-        title
-          .append('svg')
-          .attr('class', 'icon inline ml6 opacity50')
-          .html('<use xlink:href="#icon-question"/></svg>')
-        title
-          .append('svg')
-          .attr('class', 'icon inline opacity50')
-          .html('<use xlink:href="#icon-map"/>')
 
-        title
+        sectionInner
           .append('span')
           .text(data[0])
           .attr('class', 'fr')
-
-
 
       }
       else {
@@ -491,11 +491,11 @@ d3.select('#clear')
           .attr('class', ' txt-s small py1')
           .style('color', function(d,i){
             var color = i === maxIndex ? '#448ee4' : 'black'
-            return color            
+            return color
           })
           .classed('txt-bold', function(d,i){
-            var bold = i === maxIndex 
-            return bold            
+            var bold = i === maxIndex
+            return bold
           })
 
         var bar = dataRow
@@ -517,8 +517,8 @@ d3.select('#clear')
             d3.select(this).classed(color, true)
           })
           .classed('txt-bold', function(d,i){
-            var bold = i === maxIndex 
-            return bold            
+            var bold = i === maxIndex
+            return bold
           })
         bar
           .append('div')
@@ -534,10 +534,35 @@ d3.select('#clear')
 
       }
 
+      sectionInner
+        .append('div')
+        .attr('id', (corridorInfo[item].id + "-attribution"))
+        .attr('class', ' txt-s small py1')
+        .style('display', 'none')
+        .text(corridorInfo[item].attribution)
+
+        title
+        .append('a')
+        .on('click', function() {
+          // TODO: refactor the variable in this function to be more stable 
+          var x = document.getElementById(this.parentElement.parentElement.parentElement.id + "-attribution");
+          if (x.style.display === "none") {
+            x.style.display = "block";
+          } else {
+            x.style.display = "none";
+          }
+        })
+        .append('svg')
+        .attr('class', 'icon inline ml6 opacity50')
+        .html('<use xlink:href="#icon-question"/></svg>')
+        //  .append('a')
+        //  .append('svg')
+        //  .attr('class', 'icon inline opacity50')
+        //  .html('<use xlink:href="#icon-map"/>')
 
     };
-    document.getElementById('corridor-info').style.visibility = 'visible';
 
+    document.getElementById('corridor-info').style.display = 'initial';
   }
 
 
@@ -570,7 +595,7 @@ d3.select('#clear')
   function decodeHash(){
 
    var hash = window.location.hash;
-   
+
    if (hash.length < 3) return;
 
    var decodedGeometry = hash
@@ -590,5 +615,6 @@ d3.select('#clear')
 
    return turf.featureCollection(decodedGeometry);
   }
+
  });
 })
