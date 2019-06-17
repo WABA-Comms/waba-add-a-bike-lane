@@ -1,0 +1,18 @@
+{
+  "name": "lanes",
+  "version": "0.0.1",
+  "description": "",
+  "main": "cluster.js",
+  "dependencies": {
+    "colorvert": "^0.2.1",
+    "node-union-find": "^0.0.3",
+    "rbush": "^2.0.1",
+    "@turf/turf": "^5.1.6"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
