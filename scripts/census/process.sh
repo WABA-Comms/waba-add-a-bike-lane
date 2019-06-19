@@ -10,4 +10,4 @@ ogr2ogr -f "CSV" data/convert/BG_METADATA_2015.csv data/ACS_2015_5YR_BG_11_DISTR
 
 python3 aggregate.py > data/census.geojson
 
-echo "Combined GeoJSON written to ./data/census.geojson"
+echo "Output data written to ./data/census.geojson"
