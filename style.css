@@ -1,12 +1,12 @@
 body { margin:0; padding:0; }
 #map { position:absolute; top:0; bottom:0; width:100%; }
-#corridor-info { visibility:hidden; }
-.table { 
+#corridor-info { display:none; }
+.table {
 	border-style: none;
 	border-collapse: collapse;
 }
-.table td, th { 
-	border-style: none; 
+.table td, th {
+	border-style: none;
 	padding: 6px;
 }
 .secondaryText {

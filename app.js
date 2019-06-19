@@ -8,7 +8,6 @@ var map = new mapboxgl.Map({
   style: './add-bike-lane-style.json',
   center: [-77.007945, 38.896870],
   zoom: 12
-
 });
 
 // gl-draw setup
@@ -27,7 +26,7 @@ var draw = new MapboxDraw({
        "line-width": { "type": "exponential", "base": 1.5, "stops": [[12, 1],[18, 4]] }
      }
   },
-   {
+  {
      "id": "gl-draw-line-static",
      "type": "line",
      "filter": ["all", ["==", "$type", "LineString"], ["==", "active", "false"]],
@@ -58,6 +57,8 @@ var draw = new MapboxDraw({
  ]});
 map.addControl(draw);
 
+// Event handlers for the 'Add a lane'
+// and 'Clear lanes' buttons
 d3.select('#add')
  .on('click', function(){
   draw.changeMode('draw_line_string')
@@ -65,29 +66,39 @@ d3.select('#add')
 
 d3.select('#clear')
  .on('click', function(){
-  
   draw.deleteAll();
-
   map.getSource('collisions')
    .setData(emptyGeojson);
-
   map.getSource('buffer')
    .setData(emptyGeojson);
+  document.getElementById('corridor-info').style.display = 'none';
  })
 
 
  map.on('load', function() {
- d3.json('scripts/collisions/collisions.geojson', function(err, resp){
-  if (err) throw err
-  resp.features = resp.features.filter(function(ft){return typeof ft.geometry.coordinates[0] === 'number'})
-  collisions = resp;
+ Promise.all([
+   d3.json('scripts/collisions/collisions.geojson')
+   //d3.json('scripts/moving-violations/moving-violations.geojson')
+ ]).then(function(files) {
+  files[0].features = files[0].features.filter(function(ft){return typeof ft.geometry.coordinates[0] === 'number'})
+  collisions = files[0];
+  //files[1].features = files[1].features.filter(function(ft){return typeof ft.geometry.coordinates[0] === 'number'})
+  //speeding = files[1];
+  //files[2].features = files[2].features.filter(function(ft){return typeof ft.geometry.coordinates[0] === 'number'})
+  //census = files[2];
 
+  // corridorInfo defines the data about a corridor
+  // that will display once a bike lane has been added,
+  // and defines how it is displayed.
+  // `text`, `secondaryText`, and `attribution` values
+  // will display as text in the app.
   corridorInfo = [
    {
     id: 'crashes-total',
     text: 'Total crashes',
       geomType: 'point',
-    data: collisions
+    data: collisions,
+    attribution: 'Total number of crashes along this corridor in the last 2 years. Data sourced from Open Data DC, <i>Crashes in DC</i> dataset. Last updated 5/28/2019.'
    },
    {
     id: 'crashes-cyclists',
@@ -95,7 +106,8 @@ d3.select('#clear')
      geomType: 'point',
     data: turf.featureCollection(collisions.features.filter(function(ft){
      return ft.properties.TOTAL_BICYCLES > 0
-    }))
+   })),
+   attribution: 'Number of bike-related crashes along this corridor in the last 2 years. Data sourced from Open Data DC, <i>Crashes in DC</i> dataset. Last updated 5/28/2019.'
    },
    {
     id: 'crashes-pedestrians',
@@ -103,9 +115,10 @@ d3.select('#clear')
       geomType: 'point',
     data: turf.featureCollection(collisions.features.filter(function(ft){
      return ft.properties.TOTAL_PEDESTRIANS > 0
-    }))
+   })),
+    attribution: 'Number of pedestrian-related crashes along this corridor in the last 2 years. Data sourced from Open Data DC, <i>Crashes in DC</i> dataset. Last updated 5/28/2019.'
    },
-    {
+   {
      id: 'speeding-violations',
      text: 'Speeding violations',
      geomType: 'point',
@@ -113,7 +126,17 @@ d3.select('#clear')
       // Currently only Dec 2018 data
       sourceLayer: 'moving-violations-dec-2018-re-7lav76',
       filter: ['in', 'VIOLATIONCODE', "T118", "T119", "T120", "T121", "T122"]
-     }))
+    })),
+    /*data: turf.featureCollection(speeding.features.filter(function(ft){
+     return (
+       ft.properties.VIOLATIONCODE == 'T118' ||
+       ft.properties.VIOLATIONCODE == 'T119' ||
+       ft.properties.VIOLATIONCODE == 'T120' ||
+       ft.properties.VIOLATIONCODE == 'T121' ||
+       ft.properties.VIOLATIONCODE == 'T122' ||
+    )
+  })),*/
+    attribution: 'Number of speeding violations along this corridor in the last 2 years. Data sourced from Open Data DC, <i>Moving Violations Issued in *</i> datasets. Last updated 5/1/2019.'
     },
     {
      id: 'population',
@@ -122,7 +145,9 @@ d3.select('#clear')
      data: turf.featureCollection(map.querySourceFeatures('composite', {
       sourceLayer: 'combined_features-7kmirr'
      })),
-     dataFields: ['population_total']
+     //data: census,
+     dataFields: ['population_total'],
+     attribution: 'Population living in a census block that intersects this corridor. Data sourced from United States Census Bureau.'
     },
     {
      id: 'modeshare',
@@ -140,6 +165,7 @@ d3.select('#clear')
      data: turf.featureCollection(map.querySourceFeatures('composite', {
       sourceLayer: 'combined_features-7kmirr',
      })),
+     //data: census,
      dataFields: [
       'transport_bicycle',
       'transport_walked',
@@ -149,7 +175,8 @@ d3.select('#clear')
       'transport_taxicab',
       'transport_other_means'
       ],
-     total: 'transport_total'
+     total: 'transport_total',
+     attribution: 'Breakdown of population by mode of transportation used to travel to work. Data sourced from United States Census Bureau.'
     },
     {
      id: 'income',
@@ -176,6 +203,7 @@ d3.select('#clear')
      data: turf.featureCollection(map.querySourceFeatures('composite', {
       sourceLayer: 'combined_features-7kmirr',
      })),
+     //data: census,
      dataFields: [
       'income_less_than_10_000',
       'income_10_000_to_14_999',
@@ -194,14 +222,10 @@ d3.select('#clear')
       'income_150_000_to_199_999',
       'income_200_000_or_more'
       ],
-     total: 'income_total'
+     total: 'income_total',
+     attribution: 'Breakdown of population by household income. Data sourced from United States Census Bureau.'
     }
   ];
-
-  // TODO: filter these crash queries to only include 2016 and later
-  // However, the `REPORTDATE` field contains string values, not numbers, so we may want to reformat these first
-  // although it would make data updates easier if we didn't reformat it...
-
 
   // At runtime, add additional features to the map that depend on
   // data contained in this project:
@@ -351,8 +375,8 @@ d3.select('#clear')
    }
   })
 
-  // populate map with preselected line, if encoded in hash
-
+  // Populate map with preselected line (proposed bike lane)
+  // if encoded in URL hash
   var hashedGeometry = decodeHash();
   if (hashedGeometry) {
    draw.add(hashedGeometry);
@@ -362,11 +386,12 @@ d3.select('#clear')
   map.on('draw.create', updateCorridor);
   map.on('draw.delete', updateCorridor);
   map.on('draw.update', updateCorridor);
-  
+
   function updateCorridor(e) {
       d3.selectAll('#corridor-info *')
         .remove();
    corridor = turf.truncate(draw.getAll());
+   //console.log(corridor);
 
    encodeHash();
    // Currently, this allows you to draw multiple unconnected lines as a "corridor"
@@ -375,7 +400,7 @@ d3.select('#clear')
    drawCollisions(turf.pointsWithinPolygon(collisions, bufferedCorridor));
 
    map.fitBounds(turf.bbox(bufferedCorridor), {padding:{left:400, top:40, right:40, bottom:40}})
-    
+
     for (item in corridorInfo) {
 
      // Type: Point
@@ -385,93 +410,64 @@ d3.select('#clear')
 
      // Type: Polygon
       if (corridorInfo[item].geomType === "polygon") {
-
-      var dataFields = corridorInfo[item].dataFields;
-      var count = [];
-      var total = corridorInfo[item].total;
-
-      if (total) var totalCount = 0;
-
-      dataFields.forEach(function() {
-       count.push(0);
-      })
-
+        var dataFields = corridorInfo[item].dataFields;
+        var count = [];
+        var total = corridorInfo[item].total;
+        if (total) var totalCount = 0;
+        dataFields.forEach(function() {
+         count.push(0);
+        })
       // Iterate through features to check for corridor overlap
-
-      for (i in corridorInfo[item].data.features) {
-
-        var feature = corridorInfo[item].data.features[i];
-
-        //console.log(feature);
-        // We should be able to use the relatively new booleanIntersects function,
-        // which is the inverse of booleanDisjoint,
-        // but for some reason it isn't recognized.
-        //if (!turf.booleanDisjoint(bufferedCorridor.features[0].geometry, feature)) {
-        if (!turf.booleanDisjoint(bufferedCorridor, feature)) {
-        
-          //console.log(feature.properties[measurements[0]]);
-          // TODO: dedupe tiles using GEOID property (this is unique by block. Is there a better property?)
-          // TODO: add optional % calculation
-          // TODO: figure out why this function does not seem to capture all intersecting census blocks
-          
-          for (j in dataFields) {
-            count[j] += +feature.properties[dataFields[j]];
-          }
-
-          if (total) {
-           var percentage = [];
-           totalCount += +feature.properties[total];
+        for (i in corridorInfo[item].data.features) {
+          var feature = corridorInfo[item].data.features[i];
+          // We should be able to use the relatively new booleanIntersects function,
+          // which is the inverse of booleanDisjoint,
+          // but for some reason it isn't recognized.
+          if (!turf.booleanDisjoint(bufferedCorridor, feature)) {
+            // TODO: dedupe tiles using GEOID property (this is unique by block. Is there a better property?)
+            // TODO: figure out why this function does not seem to capture all intersecting census blocks
             for (j in dataFields) {
-              percentage.push(Math.round(+count[j] / totalCount * 100));
+              count[j] += +feature.properties[dataFields[j]];
+            }
+            if (total) {
+              var percentage = [];
+              totalCount += +feature.properties[total];
+              for (j in dataFields) {
+                percentage.push(Math.round(+count[j] / totalCount * 100));
+              }
             }
           }
+          var data = total ? percentage : count;
+        }
       }
-       var data = total ? percentage : count;
-      }
-    }  
-      console.log(corridorInfo[item].id, data[0]);
+      //console.log(corridorInfo[item].id, data[0]);
       var maxIndex = 0;
-
-
 
       for (index in data) {
         if (data[index] > data[maxIndex]){maxIndex = parseFloat(index)}
       }
 
-
+      // Populate UI display
       var section = d3.select('#corridor-info')
         .append('div')
         .attr('id', corridorInfo[item].id)
 
-      var title = section
+      var sectionInner = section
         .append('div')
         .classed('mt12', true);
 
-      title
+      var title = sectionInner
         .append('span')
         .classed('txt-bold', true)
         .text(corridorInfo[item].text)
 
       if (data.length === 1){
-        title
-          .append('svg')
-          .attr('class', 'icon inline ml6 opacity50')
-          .html('<use xlink:href="#icon-question"/></svg>')
-        title
-          .append('svg')
-          .attr('class', 'icon inline opacity50')
-          .html('<use xlink:href="#icon-map"/>')
-
-        title
+        sectionInner
           .append('span')
           .text(data[0])
           .attr('class', 'fr')
-
-
-
       }
       else {
-
         var dataRow = section
           .selectAll('.dataRow')
           .data(data)
@@ -479,7 +475,6 @@ d3.select('#clear')
           .append('div')
           .attr('class', 'dataRow py1 mt6')
           .style('height', '18px')
-
         dataRow
           .append('div')
           .style('width', '30%')
@@ -491,11 +486,11 @@ d3.select('#clear')
           .attr('class', ' txt-s small py1')
           .style('color', function(d,i){
             var color = i === maxIndex ? '#448ee4' : 'black'
-            return color            
+            return color
           })
           .classed('txt-bold', function(d,i){
-            var bold = i === maxIndex 
-            return bold            
+            var bold = i === maxIndex
+            return bold
           })
 
         var bar = dataRow
@@ -505,7 +500,6 @@ d3.select('#clear')
           .style('position', 'relative')
           .style('float', 'right')
           .style('height', '100%')
-
         bar
           .append('span')
           .attr('class', 'z5 absolute py1 px6 txt-s')
@@ -517,8 +511,8 @@ d3.select('#clear')
             d3.select(this).classed(color, true)
           })
           .classed('txt-bold', function(d,i){
-            var bold = i === maxIndex 
-            return bold            
+            var bold = i === maxIndex
+            return bold
           })
         bar
           .append('div')
@@ -531,15 +525,43 @@ d3.select('#clear')
             var color = i === maxIndex ? 'bg-blue-light' : 'bg-darken10'
             d3.select(this).classed(color, true)
           })
-
       }
 
+      sectionInner
+        // Add data attribution
+        .append('div')
+        .attr('id', (corridorInfo[item].id + "-attribution"))
+        .attr('class', ' txt-s small py1')
+        .style('display', 'none')
+        .html(corridorInfo[item].attribution)
 
+        title
+        // Add icon toggle for data attribution
+        .append('a')
+        .on('click', function() {
+          // TODO: refactor the variable in this function to be more stable 
+          var x = document.getElementById(this.parentElement.parentElement.parentElement.id + "-attribution");
+          if (x.style.display === "none") {
+            x.style.display = "block";
+          } else {
+            x.style.display = "none";
+          }
+        })
+        .append('svg')
+        .attr('class', 'icon inline ml6 opacity50')
+        .html('<use xlink:href="#icon-question"/></svg>')
+        // For future development:
+        // A "map" icon which can be used to toggle
+        // on/off a visualization of the data
+        // on the map itself
+        //  .append('a')
+        //  .append('svg')
+        //  .attr('class', 'icon inline opacity50')
+        //  .html('<use xlink:href="#icon-map"/>')
     };
-    document.getElementById('corridor-info').style.visibility = 'visible';
 
+    document.getElementById('corridor-info').style.display = 'initial';
   }
-
 
   function drawBuffer(geojson){
    map.getSource('buffer')
@@ -551,28 +573,23 @@ d3.select('#clear')
     .setData(geojson)
   }
 
+  // Add a URL hash to represent the drawn line
   function encodeHash(){
    var encoded = '';
-
    corridor.features.forEach(function(line){
     var joinedCoords = line.geometry.coordinates.map(function(coord){
      return coord.join(',')
     })
-
     var joinedLine = joinedCoords.join(';');
-
     encoded += joinedLine+'&'
    })
-
    window.location.hash = encoded.slice(0,-1);
   }
 
+  // Convert the URL hash to line geometry
   function decodeHash(){
-
    var hash = window.location.hash;
-   
    if (hash.length < 3) return;
-
    var decodedGeometry = hash
     .replace('#','')
     .split('&')
@@ -581,14 +598,14 @@ d3.select('#clear')
       var pt = point.split(',').map(function(coord){
        return parseFloat(coord)
       });
-
       return pt
      })
      return turf.lineString(lineString)
     })
-
-
    return turf.featureCollection(decodedGeometry);
   }
+
+ }).catch(function(err){
+   if (err) throw err
  });
 })
