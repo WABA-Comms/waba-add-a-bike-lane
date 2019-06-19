@@ -237,14 +237,14 @@ d3.select('#clear')
     'bike-lanes',
     {
       'type': 'geojson',
-      'data': './scripts/bike-lanes/Bicycle_Lanes.geojson'
+      'data': './scripts/lanes/data/Bicycle_Lanes.geojson'
     }
   )
   .addSource(
     'bike-trails',
     {
       'type': 'geojson',
-      'data': './scripts/bike-trails/Bike_Trails.geojson'
+      'data': './scripts/lanes/data/Bike_Trails.geojson'
     }
   )
   // Add bike trails layer directly before oneway layer in map style
