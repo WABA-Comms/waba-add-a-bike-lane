@@ -77,7 +77,7 @@ d3.select('#clear')
 
  map.on('load', function() {
  Promise.all([
-   d3.json('scripts/collisions/collisions.geojson')
+   d3.json('scripts/crashes/collisions.geojson')
    //d3.json('scripts/moving-violations/moving-violations.geojson')
  ]).then(function(files) {
   files[0].features = files[0].features.filter(function(ft){return typeof ft.geometry.coordinates[0] === 'number'})
