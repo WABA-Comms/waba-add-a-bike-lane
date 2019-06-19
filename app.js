@@ -1,4 +1,4 @@
-mapboxgl.accessToken = 'pk.eyJ1Ijoibmlja2kiLCJhIjoiczVvbFlXQSJ9.1Gegt3V_MTupW6wfjxq2QA';
+mapboxgl.accessToken = 'pk.eyJ1IjoiY29saW53YWJhIiwiYSI6ImNqeDNvaDlidDAweHEzemxseXl3NXV3Y2cifQ.VOXbpkao083c20VDcT6dhA';
 
 var collisions, bufferedCorridor;
 var emptyGeojson = turf.featureCollection([]);

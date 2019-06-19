@@ -18,8 +18,8 @@
       "type": "vector"
     }
   },
-  "sprite": "mapbox://sprites/nicki/cjrfg5dvs73d42so15dr0qp5u",
-  "glyphs": "mapbox://fonts/mapbox/{fontstack}/{range}.pbf",
+  "sprite": "mapbox://sprites/colinwaba/cjx3o7igr18x61cp1gg2jia9x",
+  "glyphs": "mapbox://fonts/colinwaba/{fontstack}/{range}.pbf",
   "layers": [
     {
       "id": "land",
