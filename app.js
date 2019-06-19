@@ -76,10 +76,11 @@ d3.select('#clear')
 
 
  map.on('load', function() {
- d3.json('scripts/collisions/collisions.geojson', function(err, resp){
-  if (err) throw err
-  resp.features = resp.features.filter(function(ft){return typeof ft.geometry.coordinates[0] === 'number'})
-  collisions = resp;
+ Promise.all([
+   d3.json('scripts/collisions/collisions.geojson')
+ ]).then(function(files) {
+  files[0].features = files[0].features.filter(function(ft){return typeof ft.geometry.coordinates[0] === 'number'})
+  collisions = files[0];
 
   // corridorInfo defines the data about a corridor
   // that will display once a bike lane has been added,
@@ -378,7 +379,7 @@ d3.select('#clear')
       d3.selectAll('#corridor-info *')
         .remove();
    corridor = turf.truncate(draw.getAll());
-   console.log(corridor);
+   //console.log(corridor);
 
    encodeHash();
    // Currently, this allows you to draw multiple unconnected lines as a "corridor"
@@ -590,5 +591,7 @@ d3.select('#clear')
    return turf.featureCollection(decodedGeometry);
   }
 
+ }).catch(function(err){
+   if (err) throw err
  });
 })
