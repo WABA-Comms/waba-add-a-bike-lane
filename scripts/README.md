@@ -6,7 +6,7 @@ There is one directory per dataset required to power the tool. Each one contains
 
 For **bash** scripts, both Linux and MacOS should support them natively. If running Windows, check out the [Subsystem for Linux Installation guide](https://docs.microsoft.com/en-us/windows/wsl/install-win10).
 
-Some scripts rely on Python and [GDAL](https://gdal.org/) for conversion. To use these tools on MacOS, it is recommended you install [homebrew](https://brew.sh/). Follow guidance []() to install Python and [here]() to install GDAL.
+Some scripts rely on Python and [GDAL](https://gdal.org/) for conversion. To use these tools on MacOS, it is recommended you install [homebrew](https://brew.sh/). Once installed, you can run the command `brew install gdal` to get started (more information [here](https://formulae.brew.sh/formula/gdal)).
 
 For **Node.js** scripts, refer to the [Node.js Downloads page](https://nodejs.org/en/download/) and select your OS. Some Node.js scripts require NPM be installed, follow guidance [here](https://docs.npmjs.com/creating-a-new-npm-user-account) to create an NPM account and [here](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) for install and setup.
 
