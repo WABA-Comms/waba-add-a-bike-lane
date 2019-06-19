@@ -6,7 +6,7 @@ There is one directory per dataset required to power the tool. Each one contains
 
 For **bash** scripts, both Linux and MacOS should support them natively. If running Windows, check out the [Subsystem for Linux Installation guide](https://docs.microsoft.com/en-us/windows/wsl/install-win10).
 
-Some scripts rely on Python and [GDAL](https://gdal.org/) for conversion. To use these tools on MacOS, it is recommended you install [homebrew](https://brew.sh/). To install, follow guidance in []().
+Some scripts rely on Python and [GDAL](https://gdal.org/) for conversion. To use these tools on MacOS, it is recommended you install [homebrew](https://brew.sh/). Follow guidance []() to install Python and [here]() to install GDAL.
 
 For **Node.js** scripts, refer to the [Node.js Downloads page](https://nodejs.org/en/download/) and select your OS. Some Node.js scripts require NPM be installed, follow guidance [here](https://docs.npmjs.com/creating-a-new-npm-user-account) to create an NPM account and [here](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) for install and setup.
 
@@ -36,5 +36,10 @@ This set of scripts downloads and processes DC crash data into a filtered CSV of
 
 #### lanes
 
-TBA
+Data sourced from [Open Data DC](https://opendata.dc.gov/).
 
+This set of scripts aggregates connected networks of bike lanes and trails in DC suitable for upload to Mapbox. The final dataset is saved as `lanes.geojson` in the `data` folder.
+
+1. Navigate to the `lanes` directory (`cd scripts/lanes`)
+2. Run the bash script `download.sh` using the command `sh download.sh`
+3. Run the Node.js script `process.js` using the command `node process.js`
