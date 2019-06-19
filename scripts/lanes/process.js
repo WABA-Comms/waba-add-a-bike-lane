@@ -84,4 +84,4 @@ let out = {
     "features": features
 }
 
-fs.writeFileSync("data/out.geojson", JSON.stringify(out, null, 4));
+fs.writeFileSync("data/lanes.geojson", JSON.stringify(out, null, 4));
