@@ -78,9 +78,14 @@ d3.select('#clear')
  map.on('load', function() {
  Promise.all([
    d3.json('scripts/collisions/collisions.geojson')
+   //d3.json('scripts/moving-violations/moving-violations.geojson')
  ]).then(function(files) {
   files[0].features = files[0].features.filter(function(ft){return typeof ft.geometry.coordinates[0] === 'number'})
   collisions = files[0];
+  //files[1].features = files[1].features.filter(function(ft){return typeof ft.geometry.coordinates[0] === 'number'})
+  //speeding = files[1];
+  //files[2].features = files[2].features.filter(function(ft){return typeof ft.geometry.coordinates[0] === 'number'})
+  //census = files[2];
 
   // corridorInfo defines the data about a corridor
   // that will display once a bike lane has been added,
@@ -93,7 +98,7 @@ d3.select('#clear')
     text: 'Total crashes',
       geomType: 'point',
     data: collisions,
-    attribution: 'Data attribution goes here.'
+    attribution: 'Total number of crashes along this corridor in the last 2 years. Data sourced from Open Data DC, <i>Crashes in DC</i> dataset. Last updated 5/28/2019.'
    },
    {
     id: 'crashes-cyclists',
@@ -102,7 +107,7 @@ d3.select('#clear')
     data: turf.featureCollection(collisions.features.filter(function(ft){
      return ft.properties.TOTAL_BICYCLES > 0
    })),
-   attribution: 'Data attribution goes here.'
+   attribution: 'Number of bike-related crashes along this corridor in the last 2 years. Data sourced from Open Data DC, <i>Crashes in DC</i> dataset. Last updated 5/28/2019.'
    },
    {
     id: 'crashes-pedestrians',
@@ -111,9 +116,9 @@ d3.select('#clear')
     data: turf.featureCollection(collisions.features.filter(function(ft){
      return ft.properties.TOTAL_PEDESTRIANS > 0
    })),
-    attribution: 'Data attribution goes here.'
+    attribution: 'Number of pedestrian-related crashes along this corridor in the last 2 years. Data sourced from Open Data DC, <i>Crashes in DC</i> dataset. Last updated 5/28/2019.'
    },
-    {
+   {
      id: 'speeding-violations',
      text: 'Speeding violations',
      geomType: 'point',
@@ -122,7 +127,16 @@ d3.select('#clear')
       sourceLayer: 'moving-violations-dec-2018-re-7lav76',
       filter: ['in', 'VIOLATIONCODE', "T118", "T119", "T120", "T121", "T122"]
     })),
-    attribution: 'Data attribution goes here.'
+    /*data: turf.featureCollection(speeding.features.filter(function(ft){
+     return (
+       ft.properties.VIOLATIONCODE == 'T118' ||
+       ft.properties.VIOLATIONCODE == 'T119' ||
+       ft.properties.VIOLATIONCODE == 'T120' ||
+       ft.properties.VIOLATIONCODE == 'T121' ||
+       ft.properties.VIOLATIONCODE == 'T122' ||
+    )
+  })),*/
+    attribution: 'Number of speeding violations along this corridor in the last 2 years. Data sourced from Open Data DC, <i>Moving Violations Issued in *</i> datasets. Last updated 5/1/2019.'
     },
     {
      id: 'population',
@@ -131,8 +145,9 @@ d3.select('#clear')
      data: turf.featureCollection(map.querySourceFeatures('composite', {
       sourceLayer: 'combined_features-7kmirr'
      })),
+     //data: census,
      dataFields: ['population_total'],
-     attribution: 'Data attribution goes here.'
+     attribution: 'Population living in a census block that intersects this corridor. Data sourced from United States Census Bureau.'
     },
     {
      id: 'modeshare',
@@ -150,6 +165,7 @@ d3.select('#clear')
      data: turf.featureCollection(map.querySourceFeatures('composite', {
       sourceLayer: 'combined_features-7kmirr',
      })),
+     //data: census,
      dataFields: [
       'transport_bicycle',
       'transport_walked',
@@ -160,7 +176,7 @@ d3.select('#clear')
       'transport_other_means'
       ],
      total: 'transport_total',
-     attribution: 'Data attribution goes here.'
+     attribution: 'Breakdown of population by mode of transportation used to travel to work. Data sourced from United States Census Bureau.'
     },
     {
      id: 'income',
@@ -187,6 +203,7 @@ d3.select('#clear')
      data: turf.featureCollection(map.querySourceFeatures('composite', {
       sourceLayer: 'combined_features-7kmirr',
      })),
+     //data: census,
      dataFields: [
       'income_less_than_10_000',
       'income_10_000_to_14_999',
@@ -206,14 +223,9 @@ d3.select('#clear')
       'income_200_000_or_more'
       ],
      total: 'income_total',
-     attribution: 'Data attribution goes here.'
+     attribution: 'Breakdown of population by household income. Data sourced from United States Census Bureau.'
     }
   ];
-
-  // TODO: filter these crash queries to only include 2016 and later
-  // However, the `REPORTDATE` field contains string values, not numbers, so we may want to reformat these first
-  // although it would make data updates easier if we didn't reformat it...
-
 
   // At runtime, add additional features to the map that depend on
   // data contained in this project:
@@ -516,13 +528,15 @@ d3.select('#clear')
       }
 
       sectionInner
+        // Add data attribution
         .append('div')
         .attr('id', (corridorInfo[item].id + "-attribution"))
         .attr('class', ' txt-s small py1')
         .style('display', 'none')
-        .text(corridorInfo[item].attribution)
+        .html(corridorInfo[item].attribution)
 
         title
+        // Add icon toggle for data attribution
         .append('a')
         .on('click', function() {
           // TODO: refactor the variable in this function to be more stable 
