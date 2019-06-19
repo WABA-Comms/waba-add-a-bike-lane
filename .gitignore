@@ -1,3 +1,2 @@
-scripts/census/data/*
-scripts/lanes/data/*
+scripts/crashes/node_modules/*
 scripts/lanes/node_modules/*
