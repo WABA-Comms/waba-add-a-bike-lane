@@ -5,3 +5,5 @@ if [ ! -d ./data/ACS_2015_5YR_BG_11_DISTRICT_OF_COLUMBIA.gdb ]; then
     unzip ./data/ACS_2015_5YR_BG_11.gdb.zip
     mv ACS_2015_5YR_BG_11_DISTRICT_OF_COLUMBIA.gdb data/
 fi
+
+rm -r ./data/ACS_2015_5YR_BG_11.gdb.zip

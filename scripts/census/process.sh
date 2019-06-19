@@ -10,4 +10,7 @@ ogr2ogr -f "CSV" data/convert/BG_METADATA_2015.csv data/ACS_2015_5YR_BG_11_DISTR
 
 python3 aggregate.py > data/census.geojson
 
+rm -r ./data/ACS_2015_5YR_BG_11_DISTRICT_OF_COLUMBIA.gdb
+rm -r ./data/convert
+
 echo "Output data written to ./data/census.geojson"
