@@ -8,7 +8,9 @@ For **bash** scripts, both Linux and MacOS should support them natively. If runn
 
 Some scripts rely on Python and [GDAL](https://gdal.org/) for conversion. To use these tools on MacOS, it is recommended you install [homebrew](https://brew.sh/). Once installed, you can run the command `brew install gdal` to get started (more information [here](https://formulae.brew.sh/formula/gdal)).
 
-For **Node.js** scripts, refer to the [Node.js Downloads page](https://nodejs.org/en/download/) and select your OS. Some Node.js scripts require NPM be installed, follow guidance [here](https://docs.npmjs.com/creating-a-new-npm-user-account) to create an NPM account and [here](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) for install and setup.
+All `download.sh` scripts rely on `wget` to download the required datasets. This can be installed by running the `brew install wget` command.
+
+For **Node.js** scripts, refer to the [Node.js Downloads page](https://nodejs.org/en/download/) and select your OS. This will automatically install `npm`, the Node package manager.
 
 ## Datasets
 
@@ -41,5 +43,6 @@ Data sourced from [Open Data DC](https://opendata.dc.gov/).
 This set of scripts aggregates connected networks of bike lanes and trails in DC suitable for upload to Mapbox. The final dataset is saved as `lanes.geojson` in the `data` folder.
 
 1. Navigate to the `lanes` directory (`cd scripts/lanes`)
-2. Run the bash script `download.sh` using the command `sh download.sh`
-3. Run the Node.js script `process.js` using the command `node process.js`
+2. Run `npm install` for the `process.js` dependencies
+3. Run the bash script `download.sh` using the command `sh download.sh`
+4. Run the Node.js script `process.js` using the command `node process.js`
