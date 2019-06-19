@@ -8,7 +8,6 @@ var map = new mapboxgl.Map({
   style: './add-bike-lane-style.json',
   center: [-77.007945, 38.896870],
   zoom: 12
-
 });
 
 // gl-draw setup
@@ -27,7 +26,7 @@ var draw = new MapboxDraw({
        "line-width": { "type": "exponential", "base": 1.5, "stops": [[12, 1],[18, 4]] }
      }
   },
-   {
+  {
      "id": "gl-draw-line-static",
      "type": "line",
      "filter": ["all", ["==", "$type", "LineString"], ["==", "active", "false"]],
@@ -58,6 +57,8 @@ var draw = new MapboxDraw({
  ]});
 map.addControl(draw);
 
+// Event handlers for the 'Add a lane'
+// and 'Clear lanes' buttons
 d3.select('#add')
  .on('click', function(){
   draw.changeMode('draw_line_string')
@@ -65,15 +66,11 @@ d3.select('#add')
 
 d3.select('#clear')
  .on('click', function(){
-
   draw.deleteAll();
-
   map.getSource('collisions')
    .setData(emptyGeojson);
-
   map.getSource('buffer')
    .setData(emptyGeojson);
-
   document.getElementById('corridor-info').style.display = 'none';
  })
 
@@ -84,6 +81,11 @@ d3.select('#clear')
   resp.features = resp.features.filter(function(ft){return typeof ft.geometry.coordinates[0] === 'number'})
   collisions = resp;
 
+  // corridorInfo defines the data about a corridor
+  // that will display once a bike lane has been added,
+  // and defines how it is displayed.
+  // `text`, `secondaryText`, and `attribution` values
+  // will display as text in the app.
   corridorInfo = [
    {
     id: 'crashes-total',
@@ -360,8 +362,8 @@ d3.select('#clear')
    }
   })
 
-  // populate map with preselected line, if encoded in hash
-
+  // Populate map with preselected line (proposed bike lane)
+  // if encoded in URL hash
   var hashedGeometry = decodeHash();
   if (hashedGeometry) {
    draw.add(hashedGeometry);
@@ -395,60 +397,44 @@ d3.select('#clear')
 
      // Type: Polygon
       if (corridorInfo[item].geomType === "polygon") {
-
-      var dataFields = corridorInfo[item].dataFields;
-      var count = [];
-      var total = corridorInfo[item].total;
-
-      if (total) var totalCount = 0;
-
-      dataFields.forEach(function() {
-       count.push(0);
-      })
-
+        var dataFields = corridorInfo[item].dataFields;
+        var count = [];
+        var total = corridorInfo[item].total;
+        if (total) var totalCount = 0;
+        dataFields.forEach(function() {
+         count.push(0);
+        })
       // Iterate through features to check for corridor overlap
-
-      for (i in corridorInfo[item].data.features) {
-
-        var feature = corridorInfo[item].data.features[i];
-
-        //console.log(feature);
-        // We should be able to use the relatively new booleanIntersects function,
-        // which is the inverse of booleanDisjoint,
-        // but for some reason it isn't recognized.
-        //if (!turf.booleanDisjoint(bufferedCorridor.features[0].geometry, feature)) {
-        if (!turf.booleanDisjoint(bufferedCorridor, feature)) {
-
-          //console.log(feature.properties[measurements[0]]);
-          // TODO: dedupe tiles using GEOID property (this is unique by block. Is there a better property?)
-          // TODO: add optional % calculation
-          // TODO: figure out why this function does not seem to capture all intersecting census blocks
-
-          for (j in dataFields) {
-            count[j] += +feature.properties[dataFields[j]];
-          }
-
-          if (total) {
-           var percentage = [];
-           totalCount += +feature.properties[total];
+        for (i in corridorInfo[item].data.features) {
+          var feature = corridorInfo[item].data.features[i];
+          // We should be able to use the relatively new booleanIntersects function,
+          // which is the inverse of booleanDisjoint,
+          // but for some reason it isn't recognized.
+          if (!turf.booleanDisjoint(bufferedCorridor, feature)) {
+            // TODO: dedupe tiles using GEOID property (this is unique by block. Is there a better property?)
+            // TODO: figure out why this function does not seem to capture all intersecting census blocks
             for (j in dataFields) {
-              percentage.push(Math.round(+count[j] / totalCount * 100));
+              count[j] += +feature.properties[dataFields[j]];
+            }
+            if (total) {
+              var percentage = [];
+              totalCount += +feature.properties[total];
+              for (j in dataFields) {
+                percentage.push(Math.round(+count[j] / totalCount * 100));
+              }
             }
           }
+          var data = total ? percentage : count;
+        }
       }
-       var data = total ? percentage : count;
-      }
-    }
-      console.log(corridorInfo[item].id, data[0]);
+      //console.log(corridorInfo[item].id, data[0]);
       var maxIndex = 0;
-
-
 
       for (index in data) {
         if (data[index] > data[maxIndex]){maxIndex = parseFloat(index)}
       }
 
-
+      // Populate UI display
       var section = d3.select('#corridor-info')
         .append('div')
         .attr('id', corridorInfo[item].id)
@@ -463,15 +449,12 @@ d3.select('#clear')
         .text(corridorInfo[item].text)
 
       if (data.length === 1){
-
         sectionInner
           .append('span')
           .text(data[0])
           .attr('class', 'fr')
-
       }
       else {
-
         var dataRow = section
           .selectAll('.dataRow')
           .data(data)
@@ -479,7 +462,6 @@ d3.select('#clear')
           .append('div')
           .attr('class', 'dataRow py1 mt6')
           .style('height', '18px')
-
         dataRow
           .append('div')
           .style('width', '30%')
@@ -505,7 +487,6 @@ d3.select('#clear')
           .style('position', 'relative')
           .style('float', 'right')
           .style('height', '100%')
-
         bar
           .append('span')
           .attr('class', 'z5 absolute py1 px6 txt-s')
@@ -531,7 +512,6 @@ d3.select('#clear')
             var color = i === maxIndex ? 'bg-blue-light' : 'bg-darken10'
             d3.select(this).classed(color, true)
           })
-
       }
 
       sectionInner
@@ -555,16 +535,18 @@ d3.select('#clear')
         .append('svg')
         .attr('class', 'icon inline ml6 opacity50')
         .html('<use xlink:href="#icon-question"/></svg>')
+        // For future development:
+        // A "map" icon which can be used to toggle
+        // on/off a visualization of the data
+        // on the map itself
         //  .append('a')
         //  .append('svg')
         //  .attr('class', 'icon inline opacity50')
         //  .html('<use xlink:href="#icon-map"/>')
-
     };
 
     document.getElementById('corridor-info').style.display = 'initial';
   }
-
 
   function drawBuffer(geojson){
    map.getSource('buffer')
@@ -576,28 +558,23 @@ d3.select('#clear')
     .setData(geojson)
   }
 
+  // Add a URL hash to represent the drawn line
   function encodeHash(){
    var encoded = '';
-
    corridor.features.forEach(function(line){
     var joinedCoords = line.geometry.coordinates.map(function(coord){
      return coord.join(',')
     })
-
     var joinedLine = joinedCoords.join(';');
-
     encoded += joinedLine+'&'
    })
-
    window.location.hash = encoded.slice(0,-1);
   }
 
+  // Convert the URL hash to line geometry
   function decodeHash(){
-
    var hash = window.location.hash;
-
    if (hash.length < 3) return;
-
    var decodedGeometry = hash
     .replace('#','')
     .split('&')
@@ -606,13 +583,10 @@ d3.select('#clear')
       var pt = point.split(',').map(function(coord){
        return parseFloat(coord)
       });
-
       return pt
      })
      return turf.lineString(lineString)
     })
-
-
    return turf.featureCollection(decodedGeometry);
   }
 
