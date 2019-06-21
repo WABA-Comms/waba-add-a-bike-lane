@@ -77,15 +77,18 @@ d3.select('#clear')
 
  map.on('load', function() {
  Promise.all([
-   d3.json('scripts/crashes/collisions.geojson')
+   d3.json('scripts/crashes/collisions.geojson'),
    //d3.json('scripts/moving-violations/moving-violations.geojson')
+   d3.json('scripts/census/data/census.geojson')
+
  ]).then(function(files) {
   files[0].features = files[0].features.filter(function(ft){return typeof ft.geometry.coordinates[0] === 'number'})
   collisions = files[0];
   //files[1].features = files[1].features.filter(function(ft){return typeof ft.geometry.coordinates[0] === 'number'})
   //speeding = files[1];
-  //files[2].features = files[2].features.filter(function(ft){return typeof ft.geometry.coordinates[0] === 'number'})
-  //census = files[2];
+  //files[1].features = files[1].features.filter(function(ft){return typeof ft.geometry.coordinates[0] === 'number'})
+  census = files[1];
+  console.log(census);
 
   // corridorInfo defines the data about a corridor
   // that will display once a bike lane has been added,
@@ -142,10 +145,10 @@ d3.select('#clear')
      id: 'population',
      text: 'Population',
      geomType: 'polygon',
-     data: turf.featureCollection(map.querySourceFeatures('composite', {
+     /*data: turf.featureCollection(map.querySourceFeatures('composite', {
       sourceLayer: 'combined_features-7kmirr'
-     })),
-     //data: census,
+    })),*/
+     data: census,
      dataFields: ['population_total'],
      attribution: 'Population living in a census block that intersects this corridor. Data sourced from United States Census Bureau.'
     },
@@ -162,10 +165,10 @@ d3.select('#clear')
       'Other'
      ],
      geomType: 'polygon',
-     data: turf.featureCollection(map.querySourceFeatures('composite', {
+     /*data: turf.featureCollection(map.querySourceFeatures('composite', {
       sourceLayer: 'combined_features-7kmirr',
-     })),
-     //data: census,
+    })),*/
+     data: census,
      dataFields: [
       'transport_bicycle',
       'transport_walked',
@@ -200,10 +203,10 @@ d3.select('#clear')
       '>200k'
      ],
      geomType: 'polygon',
-     data: turf.featureCollection(map.querySourceFeatures('composite', {
+     /*data: turf.featureCollection(map.querySourceFeatures('composite', {
       sourceLayer: 'combined_features-7kmirr',
-     })),
-     //data: census,
+    })),*/
+     data: census,
      dataFields: [
       'income_less_than_10_000',
       'income_10_000_to_14_999',
